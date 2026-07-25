@@ -105,7 +105,11 @@
         }
     </style>
 </head>
-<div class="kanban-container" style="max-width: 900px; margin: 0 auto; text-align: left;">
+</body>    
+    <h1>Welcome to Kevin's First GitHub Website!</h1>
+    <p>This basic page is hosted for free using GitHub Pages.</p>
+
+    <div class="kanban-container" style="max-width: 900px; margin: 0 auto; text-align: left;">
     <h2>Project Task Board</h2>
     
     <!-- Form to add new tasks -->
@@ -135,60 +139,7 @@
         </div>
     </div>
 </div>
-let draggedCard = null;
 
-// Add a new task to the "To Do" column
-function addTask() {
-    const input = document.getElementById('taskInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    const taskCard = createCardElement(text);
-    document.getElementById('todo').appendChild(taskCard);
-    
-    input.value = '';
-}
-
-// Create the task card HTML element with drag-and-drop capability
-function createCardElement(text) {
-    const card = document.createElement('div');
-    card.className = 'task-card';
-    card.draggable = true;
-    
-    // Unique ID for dragging reference
-    card.id = 'task-' + Date.now() + Math.random().toString(36).substr(2, 5);
-
-    card.innerHTML = `
-        <span>${text}</span>
-        <button class="delete-btn" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    // Drag event listeners
-    card.addEventListener('dragstart', (e) => {
-        draggedCard = card;
-        e.dataTransfer.setData('text/plain', card.id);
-    });
-
-    card.addEventListener('dragend', () => {
-        draggedCard = null;
-    });
-
-    return card;
-}
-
-// Allow dropping items into columns
-function allowDrop(e) {
-    e.preventDefault();
-}
-
-// Handle the drop action into a specific column list
-function drop(e, columnId) {
-    e.preventDefault();
-    const targetList = document.getElementById(columnId);
-    if (draggedCard) {
-        targetList.appendChild(draggedCard);
-    }
-}    
 <script>
   // Initial tasks state
   let tasks = JSON.parse(localStorage.getItem('gh_page_tasks')) || [
@@ -271,7 +222,6 @@ function drop(e, columnId) {
   renderTasks();
 </script>    
 <body>
-    <h1>Welcome to Kevin's First GitHub Website!</h1>
-    <p>This basic page is hosted for free using GitHub Pages.</p>
+
 </body>
 </html>
