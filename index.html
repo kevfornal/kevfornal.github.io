@@ -105,6 +105,87 @@
         }
     </style>
 </head>
+<script>
+  // Initial tasks state
+  let tasks = JSON.parse(localStorage.getItem('gh_page_tasks')) || [
+    { id: '1', text: 'Set up GitHub Page', status: 'done' },
+    { id: '2', text: 'Add local weather widget', status: 'in-progress' },
+    { id: '3', text: 'Customize theme colors', status: 'todo' }
+  ];
+
+  function saveTasks() {
+    localStorage.setItem('gh_page_tasks', JSON.stringify(tasks));
+  }
+
+  function renderTasks() {
+    ['todo', 'in-progress', 'done'].forEach(status => {
+      const list = document.getElementById(status);
+      list.innerHTML = '';
+      
+      tasks.filter(t => t.status === status).forEach(task => {
+        const el = document.createElement('div');
+        el.className = 'task-card';
+        el.draggable = true;
+        el.id = `task-${task.id}`;
+        el.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
+        
+        el.innerHTML = `
+          <span>${escapeHtml(task.text)}</span>
+          <button class="delete-btn" onclick="deleteTask('${task.id}')">&times;</button>
+        `;
+        
+        list.appendChild(el);
+      });
+    });
+  }
+
+  function addTask(e) {
+    e.preventDefault();
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    tasks.push({
+      id: Date.now().toString(),
+      text: text,
+      status: 'todo'
+    });
+
+    input.value = '';
+    saveTasks();
+    renderTasks();
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    saveTasks();
+    renderTasks();
+  }
+
+  function allowDrop(e) {
+    e.preventDefault();
+  }
+
+  function drop(e, targetStatus) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      task.status = targetStatus;
+      saveTasks();
+      renderTasks();
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, match => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[match]));
+  }
+
+  // Load tasks on startup
+  renderTasks();
+</script>    
 <body>
     <h1>Welcome to Kevin's First GitHub Website!</h1>
     <p>This basic page is hosted for free using GitHub Pages.</p>
