@@ -5,6 +5,104 @@
     <title>Kevin's Basic Website</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        /* SharePoint Task Board Web Part */
+        .kanban-board {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 16px;
+          margin-top: 15px;
+        }
+        
+        .kanban-column {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          padding: 12px;
+          min-height: 250px;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .kanban-column h3 {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: #475569;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin: 0 0 12px 0;
+          padding-bottom: 6px;
+          border-bottom: 2px solid #cbd5e1;
+        }
+        
+        .task-list {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding-bottom: 10px;
+        }
+        
+        .task-card {
+          background: #ffffff;
+          padding: 10px 12px;
+          border-radius: 4px;
+          border: 1px solid #cbd5e1;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          cursor: grab;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.9rem;
+          color: #1e293b;
+          user-select: none;
+        }
+        
+        .task-card:active {
+          cursor: grabbing;
+          opacity: 0.6;
+        }
+        
+        .delete-btn {
+          background: none;
+          border: none;
+          color: #94a3b8;
+          cursor: pointer;
+          font-size: 1.1rem;
+          padding: 0 4px;
+          line-height: 1;
+        }
+        
+        .delete-btn:hover {
+          color: #ef4444;
+        }
+        
+        .add-task-form {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 15px;
+        }
+        
+        .add-task-form input {
+          flex: 1;
+          padding: 8px 12px;
+          border: 1px solid #cbd5e1;
+          border-radius: 4px;
+          font-size: 0.9rem;
+        }
+        
+        .add-task-form button {
+          background: #2563eb;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 500;
+        }
+        
+        .add-task-form button:hover {
+          background: #1d4ed8;
+        }
     </style>
 </head>
 <body>
