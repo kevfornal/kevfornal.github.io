@@ -16,7 +16,7 @@ import yfinance as yf
 # This reads the secret set in GitHub Actions.
 # If running locally on your computer, it defaults to the fallback password.
 SECRET_PASSPHRASE = os.environ.get(
-    "PORTFOLIO_PASSPHRASE", "YourSuperSecretClientPassphrase123!"
+    "CLIENT_PASSPHRASE", "YourSuperSecretClientPassphrase123!"
 )
 
 HOLDINGS = [
