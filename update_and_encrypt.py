@@ -1,14 +1,17 @@
 import base64
 import json
 from datetime import datetime
-from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Random import get_random_bytes
+import os
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.padding import PKCS7
 import pandas as pd
 import yfinance as yf
 
 # ==========================================
-# 1. PORTFOLIO CONFIGURATION
+# 1. CONFIGURATION
 # ==========================================
 HOLDINGS = [
     {
@@ -38,30 +41,42 @@ SECRET_PASSPHRASE = "YourSuperSecretClientPassphrase123!"
 
 
 # ==========================================
-# 2. ENCRYPTION HELPER (AES-256-CBC)
+# 2. MATCHING ENCRYPTION ENGINE
 # ==========================================
 def encrypt_payload(data_dict, passphrase):
-    json_str = json.dumps(data_dict)
-    salt = get_random_bytes(16)
-    # Derive a 256-bit key matching CryptoJS PBKDF2 defaults
-    key = PBKDF2(passphrase, salt, dkLen=32, count=1000)
-    iv = get_random_bytes(16)
+    json_bytes = json.dumps(data_dict).encode("utf-8")
 
-    cipher = AES.new(key, AES.MODE_CBC, iv)
+    # Generate random 16-byte salt & IV
+    salt = os.urandom(16)
+    iv = os.urandom(16)
 
-    # PKCS7 Padding
-    pad_len = 16 - (len(json_str) % 16)
-    padded_data = json_str + (chr(pad_len) * pad_len)
+    # Derive 256-bit key matching CryptoJS defaults
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=1000,
+        backend=default_backend(),
+    )
+    key = kdf.derive(passphrase.encode("utf-8"))
 
-    encrypted = cipher.encrypt(padded_data.encode("utf-8"))
+    # Apply PKCS7 Padding
+    padder = PKCS7(128).padder()
+    padded_data = padder.update(json_bytes) + padder.finalize()
 
-    # Bundle salt + iv + ciphertext in Base64 for the web client
-    payload = {
+    # Encrypt AES-256-CBC
+    cipher = Cipher(
+        algorithms.AES(key), modes.CBC(iv), backend=default_backend()
+    )
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+
+    # Structure payload for browser consumption
+    return json.dumps({
         "salt": base64.b64encode(salt).decode("utf-8"),
         "iv": base64.b64encode(iv).decode("utf-8"),
-        "ciphertext": base64.b64encode(encrypted).decode("utf-8"),
-    }
-    return json.dumps(payload)
+        "ciphertext": base64.b64encode(ciphertext).decode("utf-8"),
+    })
 
 
 # ==========================================
@@ -82,9 +97,7 @@ for date_idx, row in data.iterrows():
         t = h["ticker"]
         if date_str >= h["purchase_date"]:
             price = (
-                float(row[t])
-                if not pd.isna(row[t])
-                else h["cost_basis"]
+                float(row[t]) if not pd.isna(row[t]) else h["cost_basis"]
             )
             daily_entry[t] = round(price * h["shares"], 2)
         else:
@@ -97,14 +110,9 @@ portfolio_payload = {
     "history": history_by_date,
 }
 
-# ==========================================
-# 4. ENCRYPT AND WRITE FILE
-# ==========================================
+# Write encrypted output
 encrypted_output = encrypt_payload(portfolio_payload, SECRET_PASSPHRASE)
-
 with open("portfolio_data.enc", "w") as f:
     f.write(encrypted_output)
 
-print(
-    "Successfully created encrypted file: portfolio_data.enc (AES-256)"
-)
+print("Successfully generated valid portfolio_data.enc")
