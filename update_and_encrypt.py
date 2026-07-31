@@ -37,7 +37,7 @@ HOLDINGS = [
     },
 ]
 
-SECRET_PASSPHRASE = "YourSuperSecretClientPassphrase123!"
+SECRET_PASSPHRASE = "Stock"
 
 
 # ==========================================
