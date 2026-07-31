@@ -2,7 +2,7 @@ name: Update Encrypted Portfolio Data
 
 on:
   schedule:
-    - cron: '0 21 * * 1-5' # Weekdays post-close
+    - cron: '0 21 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -22,18 +22,18 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install yfinance pandas pycryptodome
+          pip install yfinance pandas cryptography
 
       - name: Run Update & Encrypt Script
         env:
-          SECRET_PASSPHRASE: ${{ secrets.CLIENT_PASSPHRASE }}
+          PORTFOLIO_PASSPHRASE: ${{ secrets.portfolio_passphrase }}
         run: |
           python update_and_encrypt.py
 
       - name: Commit Encrypted Output
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "github-actions[bot]"
           git add portfolio_data.enc
           git commit -m "chore: auto-update encrypted portfolio" || exit 0
           git push
