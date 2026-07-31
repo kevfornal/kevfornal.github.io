@@ -11,8 +11,14 @@ import pandas as pd
 import yfinance as yf
 
 # ==========================================
-# 1. CONFIGURATION
+# 1. READ PASSPHRASE FROM ENVIRONMENT / GIT SECRETS
 # ==========================================
+# This reads the secret set in GitHub Actions.
+# If running locally on your computer, it defaults to the fallback password.
+SECRET_PASSPHRASE = os.environ.get(
+    "PORTFOLIO_PASSPHRASE", "YourSuperSecretClientPassphrase123!"
+)
+
 HOLDINGS = [
     {
         "ticker": "XOM",
@@ -37,20 +43,13 @@ HOLDINGS = [
     },
 ]
 
-SECRET_PASSPHRASE = "Stock"
 
-
-# ==========================================
-# 2. MATCHING ENCRYPTION ENGINE
-# ==========================================
 def encrypt_payload(data_dict, passphrase):
     json_bytes = json.dumps(data_dict).encode("utf-8")
 
-    # Generate random 16-byte salt & IV
     salt = os.urandom(16)
     iv = os.urandom(16)
 
-    # Derive 256-bit key matching CryptoJS defaults
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -60,18 +59,15 @@ def encrypt_payload(data_dict, passphrase):
     )
     key = kdf.derive(passphrase.encode("utf-8"))
 
-    # Apply PKCS7 Padding
     padder = PKCS7(128).padder()
     padded_data = padder.update(json_bytes) + padder.finalize()
 
-    # Encrypt AES-256-CBC
     cipher = Cipher(
         algorithms.AES(key), modes.CBC(iv), backend=default_backend()
     )
     encryptor = cipher.encryptor()
     ciphertext = encryptor.update(padded_data) + encryptor.finalize()
 
-    # Structure payload for browser consumption
     return json.dumps({
         "salt": base64.b64encode(salt).decode("utf-8"),
         "iv": base64.b64encode(iv).decode("utf-8"),
@@ -79,9 +75,7 @@ def encrypt_payload(data_dict, passphrase):
     })
 
 
-# ==========================================
-# 3. FETCH & CALCULATE PORTFOLIO DATA
-# ==========================================
+# Fetch Market Data
 earliest_date = min(h["purchase_date"] for h in HOLDINGS)
 tickers = [h["ticker"] for h in HOLDINGS]
 
@@ -110,9 +104,8 @@ portfolio_payload = {
     "history": history_by_date,
 }
 
-# Write encrypted output
 encrypted_output = encrypt_payload(portfolio_payload, SECRET_PASSPHRASE)
 with open("portfolio_data.enc", "w") as f:
     f.write(encrypted_output)
 
-print("Successfully generated valid portfolio_data.enc")
+print("Successfully generated portfolio_data.enc using the configured key.")
