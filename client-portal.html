@@ -6,7 +6,7 @@
   <title>Secure Client Investment Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- CryptoJS for browser-side AES decryption -->
+  <!-- CryptoJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
@@ -20,8 +20,8 @@
         <p class="text-xs text-slate-400 mt-1">Enter your encryption passphrase to view portfolio metrics.</p>
       </div>
       <div>
-        <input type="password" id="passphraseInput" placeholder="Enter Access Key..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 text-center tracking-widest" />
-        <p id="authError" class="text-rose-400 text-xs mt-2 hidden">Invalid Key. Decryption failed.</p>
+        <input type="password" id="passphraseInput" placeholder="Enter Access Key..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 text-center tracking-widest" onkeydown="if(event.key === 'Enter') unlockDashboard()" />
+        <p id="authError" class="text-rose-400 text-xs mt-2 hidden">Invalid Key or Data File missing.</p>
       </div>
       <button onclick="unlockDashboard()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-3 rounded-lg transition-colors">Decrypt & Access</button>
     </div>
@@ -37,39 +37,39 @@
       <button onclick="location.reload()" class="px-3 py-1.5 bg-slate-800 text-xs rounded border border-slate-700 hover:bg-slate-700">Lock Session</button>
     </header>
 
-    <!-- Metrics + Chart Canvas -->
     <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700/50">
-      <div class="relative h-80 w-full">
+      <div class="relative h-96 w-full">
         <canvas id="portfolioChart"></canvas>
       </div>
     </div>
   </div>
 
   <script>
-    let decryptedData = null;
-
     async function unlockDashboard() {
       const passphrase = document.getElementById('passphraseInput').value;
       const errorEl = document.getElementById('authError');
       errorEl.classList.add('hidden');
 
       try {
-        // Fetch raw encrypted payload
+        // 1. Fetch encrypted JSON file
         const res = await fetch('./portfolio_data.enc');
+        if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
+        
         const encContainer = await res.json();
 
-        // Parse hex/base64 structures
+        // 2. Parse Base64 inputs
         const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
         const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
         const ciphertext = encContainer.ciphertext;
 
-        # Derive key via PBKDF2
+        // 3. Derive key matching Python SHA256 PBKDF2
         const key = CryptoJS.PBKDF2(passphrase, salt, {
           keySize: 256 / 32,
-          iterations: 1000
+          iterations: 1000,
+          hasher: CryptoJS.algo.SHA256
         });
 
-        # Decrypt AES-256
+        // 4. Decrypt AES-256
         const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
           iv: iv,
           mode: CryptoJS.mode.CBC,
@@ -77,12 +77,11 @@
         });
 
         const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-        
-        if (!jsonString) throw new Error("Bad key");
+        if (!jsonString) throw new Error("Decryption failed - incorrect key");
 
-        decryptedData = JSON.parse(jsonString);
+        const decryptedData = JSON.parse(jsonString);
         
-        // Success: Hide modal and render chart
+        // 5. Unlock UI
         document.getElementById('authModal').classList.add('hidden');
         document.getElementById('dashboardContent').classList.remove('hidden');
         document.getElementById('lastUpdated').innerText = `Last Sync: ${decryptedData.last_updated}`;
@@ -90,6 +89,8 @@
         renderChart(decryptedData);
 
       } catch (e) {
+        console.error(e);
+        errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
         errorEl.classList.remove('hidden');
       }
     }
@@ -98,7 +99,6 @@
       const ctx = document.getElementById('portfolioChart').getContext('2d');
       const dates = Object.keys(data.history);
       
-      // Calculate daily aggregate totals across all holdings
       const totals = dates.map(d => {
         return Object.values(data.history[d]).reduce((sum, val) => sum + val, 0);
       });
