@@ -3,221 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Client Investment Dashboard</title>
-  <!-- Tailwind CSS -->
+  <title>Secure Client Investment Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Chart.js Adapter for Dates -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <!-- CryptoJS for browser-side AES decryption -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-  <div class="max-w-7xl mx-auto space-y-6">
-    <!-- Header -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4">
+  <!-- PASSCODE MODAL OVERLAY -->
+  <div id="authModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 max-w-md w-full text-center space-y-6 shadow-2xl">
+      <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl">🔒</div>
+      <div>
+        <h2 class="text-xl font-bold text-white">Private Client Portal</h2>
+        <p class="text-xs text-slate-400 mt-1">Enter your encryption passphrase to view portfolio metrics.</p>
+      </div>
+      <div>
+        <input type="password" id="passphraseInput" placeholder="Enter Access Key..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 text-center tracking-widest" />
+        <p id="authError" class="text-rose-400 text-xs mt-2 hidden">Invalid Key. Decryption failed.</p>
+      </div>
+      <button onclick="unlockDashboard()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-3 rounded-lg transition-colors">Decrypt & Access</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CONTENT (Hidden until decrypted) -->
+  <div id="dashboardContent" class="max-w-7xl mx-auto space-y-6 p-6 hidden">
+    <header class="flex justify-between items-center border-b border-slate-800 pb-4">
       <div>
         <h1 class="text-2xl font-bold text-emerald-400">Consolidated Portfolio Tracker</h1>
-        <p class="text-sm text-slate-400">Custom Wealth Analytics & Performance Reporting</p>
+        <p class="text-xs text-slate-400" id="lastUpdated">Last Sync: --</p>
       </div>
-      <div class="mt-4 md:mt-0 flex gap-2">
-        <button onclick="filterTimeframe('1M')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-700">1M</button>
-        <button onclick="filterTimeframe('6M')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-700">6M</button>
-        <button onclick="filterTimeframe('1Y')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-700">1Y</button>
-        <button onclick="filterTimeframe('YTD')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-700">YTD</button>
-        <button onclick="filterTimeframe('ALL')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-xs rounded font-semibold text-white">ALL</button>
-      </div>
+      <button onclick="location.reload()" class="px-3 py-1.5 bg-slate-800 text-xs rounded border border-slate-700 hover:bg-slate-700">Lock Session</button>
     </header>
 
-    <!-- Top Metrics Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
-        <span class="text-xs text-slate-400 uppercase tracking-wider">Total Invested</span>
-        <div id="metric-invested" class="text-2xl font-bold mt-1">$0.00</div>
-      </div>
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
-        <span class="text-xs text-slate-400 uppercase tracking-wider">Selected Current Value</span>
-        <div id="metric-value" class="text-2xl font-bold mt-1 text-emerald-400">$0.00</div>
-      </div>
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
-        <span class="text-xs text-slate-400 uppercase tracking-wider">Total Gain / Loss</span>
-        <div id="metric-return" class="text-2xl font-bold mt-1">$0.00</div>
-      </div>
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
-        <span class="text-xs text-slate-400 uppercase tracking-wider">Return (%)</span>
-        <div id="metric-percentage" class="text-2xl font-bold mt-1">0.00%</div>
-      </div>
-    </div>
-
-    <!-- Chart Section -->
+    <!-- Metrics + Chart Canvas -->
     <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700/50">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold text-slate-200">Historical Cumulative Performance</h2>
-        <div class="flex items-center gap-2">
-          <label class="text-xs text-slate-400">Sector Filter:</label>
-          <select id="sectorFilter" onchange="applySectorFilter()" class="bg-slate-900 border border-slate-700 text-xs rounded p-1.5 text-slate-200">
-            <option value="ALL">All Sectors</option>
-            <option value="Energy">Energy</option>
-            <option value="Technology">Technology</option>
-            <option value="Real Estate">Real Estate</option>
-          </select>
-        </div>
-      </div>
       <div class="relative h-80 w-full">
         <canvas id="portfolioChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Holdings Selection Table -->
-    <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700/50 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-slate-200">Client Holdings & Position Customizer</h2>
-        <button onclick="addHoldingRow()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold rounded text-white">+ Add Position</button>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-900/60 text-xs uppercase text-slate-400">
-            <tr>
-              <th class="p-3"><input type="checkbox" id="selectAll" checked onclick="toggleAllRows(this)" /></th>
-              <th class="p-3">Ticker</th>
-              <th class="p-3">Sector</th>
-              <th class="p-3">Purchase Date</th>
-              <th class="p-3">Shares</th>
-              <th class="p-3">Avg Cost ($)</th>
-              <th class="p-3">Current Price ($)</th>
-              <th class="p-3">Gain / Loss</th>
-            </tr>
-          </thead>
-          <tbody id="holdingsTableBody" class="divide-y divide-slate-700/50">
-            <!-- Dynamic Rows Injected Here -->
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
 
   <script>
-    // Sample Portfolio Data Model
-    let portfolio = [
-      { id: 1, selected: true, ticker: 'XOM', sector: 'Energy', date: '2024-01-15', shares: 150, costBasis: 98.50, currentPrice: 118.20 },
-      { id: 2, selected: true, ticker: 'CVX', sector: 'Energy', date: '2024-03-10', shares: 80, costBasis: 145.00, currentPrice: 158.40 },
-      { id: 3, selected: true, ticker: 'AAPL', sector: 'Technology', date: '2023-06-01', shares: 50, costBasis: 175.00, currentPrice: 225.10 },
-      { id: 4, selected: true, ticker: 'O', sector: 'Real Estate', date: '2023-11-20', shares: 200, costBasis: 52.30, currentPrice: 61.50 }
-    ];
+    let decryptedData = null;
 
-    let chartInstance = null;
+    async function unlockDashboard() {
+      const passphrase = document.getElementById('passphraseInput').value;
+      const errorEl = document.getElementById('authError');
+      errorEl.classList.add('hidden');
 
-    function init() {
-      renderTable();
-      updateMetrics();
-      renderChart();
+      try {
+        // Fetch raw encrypted payload
+        const res = await fetch('./portfolio_data.enc');
+        const encContainer = await res.json();
+
+        // Parse hex/base64 structures
+        const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
+        const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
+        const ciphertext = encContainer.ciphertext;
+
+        # Derive key via PBKDF2
+        const key = CryptoJS.PBKDF2(passphrase, salt, {
+          keySize: 256 / 32,
+          iterations: 1000
+        });
+
+        # Decrypt AES-256
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+          iv: iv,
+          mode: CryptoJS.mode.CBC,
+          padding: CryptoJS.pad.Pkcs7
+        });
+
+        const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
+        
+        if (!jsonString) throw new Error("Bad key");
+
+        decryptedData = JSON.parse(jsonString);
+        
+        // Success: Hide modal and render chart
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('dashboardContent').classList.remove('hidden');
+        document.getElementById('lastUpdated').innerText = `Last Sync: ${decryptedData.last_updated}`;
+        
+        renderChart(decryptedData);
+
+      } catch (e) {
+        errorEl.classList.remove('hidden');
+      }
     }
 
-    function renderTable() {
-      const tbody = document.getElementById('holdingsTableBody');
-      tbody.innerHTML = '';
-
-      portfolio.forEach((item, index) => {
-        const totalCost = item.shares * item.costBasis;
-        const totalValue = item.shares * item.currentPrice;
-        const gainLoss = totalValue - totalCost;
-        const gainPct = ((gainLoss / totalCost) * 100).toFixed(2);
-        const gainClass = gainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400';
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-700/30';
-        tr.innerHTML = `
-          <td class="p-3"><input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleSelect(${index})" /></td>
-          <td class="p-3 font-semibold text-white">${item.ticker}</td>
-          <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-700 rounded-full border border-slate-600">${item.sector}</span></td>
-          <td class="p-3 text-slate-400">${item.date}</td>
-          <td class="p-3">${item.shares}</td>
-          <td class="p-3">$${item.costBasis.toFixed(2)}</td>
-          <td class="p-3">$${item.currentPrice.toFixed(2)}</td>
-          <td class="p-3 ${gainClass} font-semibold">$${gainLoss.toFixed(2)} (${gainPct}%)</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function toggleSelect(index) {
-      portfolio[index].selected = !portfolio[index].selected;
-      updateMetrics();
-      renderChart();
-    }
-
-    function toggleAllRows(masterCheckbox) {
-      portfolio.forEach(p => p.selected = masterCheckbox.checked);
-      renderTable();
-      updateMetrics();
-      renderChart();
-    }
-
-    function applySectorFilter() {
-      const sector = document.getElementById('sectorFilter').value;
-      portfolio.forEach(p => {
-        p.selected = (sector === 'ALL' || p.sector === sector);
-      });
-      renderTable();
-      updateMetrics();
-      renderChart();
-    }
-
-    function updateMetrics() {
-      const selected = portfolio.filter(p => p.selected);
-      const totalInvested = selected.reduce((sum, p) => sum + (p.shares * p.costBasis), 0);
-      const totalValue = selected.reduce((sum, p) => sum + (p.shares * p.currentPrice), 0);
-      const totalReturn = totalValue - totalInvested;
-      const pctReturn = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0;
-
-      document.getElementById('metric-invested').innerText = `$${totalInvested.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-      document.getElementById('metric-value').innerText = `$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-      
-      const returnEl = document.getElementById('metric-return');
-      returnEl.innerText = `$${totalReturn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-      returnEl.className = `text-2xl font-bold mt-1 ${totalReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-
-      const pctEl = document.getElementById('metric-percentage');
-      pctEl.innerText = `${pctReturn.toFixed(2)}%`;
-      pctEl.className = `text-2xl font-bold mt-1 ${pctReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-    }
-
-    function renderChart() {
+    function renderChart(data) {
       const ctx = document.getElementById('portfolioChart').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      const dates = ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01', '2024-06-01', '2024-07-01'];
+      const dates = Object.keys(data.history);
       
-      // Calculate mock growth curves based on active selections
-      const selected = portfolio.filter(p => p.selected);
-      const aggregateData = dates.map((_, i) => {
-        return selected.reduce((sum, item) => {
-          const factor = 1 + ((i * 0.02) * (item.sector === 'Energy' ? 1.5 : 0.8));
-          return sum + (item.shares * item.costBasis * factor);
-        }, 0);
+      // Calculate daily aggregate totals across all holdings
+      const totals = dates.map(d => {
+        return Object.values(data.history[d]).reduce((sum, val) => sum + val, 0);
       });
 
-      chartInstance = new Chart(ctx, {
+      new Chart(ctx, {
         type: 'line',
         data: {
           labels: dates,
           datasets: [{
-            label: 'Selected Aggregate Portfolio Value ($)',
-            data: aggregateData,
+            label: 'Total Portfolio Value ($)',
+            data: totals,
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: true,
-            tension: 0.3,
-            borderWidth: 2
+            tension: 0.2
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: '#94a3b8' } }
-          },
           scales: {
             x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
@@ -225,34 +126,6 @@
         }
       });
     }
-
-    function filterTimeframe(tf) {
-      // Timeframe switching logic hooks in here for API dynamic range fetching
-      renderChart();
-    }
-
-    function addHoldingRow() {
-      const ticker = prompt("Enter Ticker (e.g. MSFT):", "MSFT");
-      if (!ticker) return;
-      const sector = prompt("Enter Sector (e.g. Technology, Energy):", "Technology");
-      const shares = parseFloat(prompt("Enter Number of Shares:", "100") || "0");
-      const costBasis = parseFloat(prompt("Enter Cost Basis per Share ($):", "300") || "0");
-
-      portfolio.push({
-        id: Date.now(),
-        selected: true,
-        ticker: ticker.toUpperCase(),
-        sector: sector || 'General',
-        date: new Date().toISOString().split('T')[0],
-        shares: shares,
-        costBasis: costBasis,
-        currentPrice: costBasis * 1.05 // Default initial mark
-      });
-
-      init();
-    }
-
-    window.onload = init;
   </script>
 </body>
 </html>
