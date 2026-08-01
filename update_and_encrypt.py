@@ -79,7 +79,20 @@ def encrypt_payload(data_dict, passphrase):
 earliest_date = min(h["purchase_date"] for h in HOLDINGS)
 tickers = [h["ticker"] for h in HOLDINGS]
 
-data = yf.download(tickers, start=earliest_date, progress=False)["Adj Close"]
+df = yf.download(tickers, start=earliest_date, progress=False)
+
+# Check which column structure yfinance returned and extract closing prices
+if "Adj Close" in df:
+    data = df["Adj Close"]
+elif "Close" in df:
+    data = df["Close"]
+else:
+    # If yfinance returned a MultiIndex or level-based structure
+    try:
+        data = df.xs("Close", axis=1, level=0)
+    except Exception:
+        data = df.xs("Adj Close", axis=1, level=0)
+        
 if isinstance(data, pd.Series):
     data = data.to_frame(name=tickers[0])
 
