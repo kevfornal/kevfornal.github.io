@@ -104,11 +104,11 @@
 
   // --- 1. KPI Summary Cards ---
   function renderSummaryCards(data) {
-    const dates = Object.keys(data.history);
+    const dates = Object.keys(data.history || {});
     if (dates.length === 0) return;
 
     const latestDate = dates[dates.length - 1];
-    const latestValues = data.history[latestDate];
+    const latestValues = data.history[latestDate] || {};
     const totalVal = Object.values(latestValues).reduce((sum, v) => sum + v, 0);
 
     let changeVal = 0;
@@ -116,7 +116,7 @@
 
     if (dates.length > 1) {
       const prevDate = dates[dates.length - 2];
-      const prevTotal = Object.values(data.history[prevDate]).reduce((sum, v) => sum + v, 0);
+      const prevTotal = Object.values(data.history[prevDate] || {}).reduce((sum, v) => sum + v, 0);
       changeVal = totalVal - prevTotal;
       changePct = prevTotal > 0 ? (changeVal / prevTotal) * 100 : 0;
     }
@@ -138,12 +138,13 @@
   // --- 2. Portfolio Line Chart ---
   function renderChart(data) {
     const canvas = document.getElementById('portfolioChart');
-    if (!canvas) return;
+    if (!canvas) return; // Safely skip if canvas isn't in HTML
+    
     const ctx = canvas.getContext('2d');
-    const dates = Object.keys(data.history);
+    const dates = Object.keys(data.history || {});
     
     const totals = dates.map(d => {
-      return Object.values(data.history[d]).reduce((sum, val) => sum + val, 0);
+      return Object.values(data.history[d] || {}).reduce((sum, val) => sum + val, 0);
     });
 
     if (portfolioChartInstance) portfolioChartInstance.destroy();
@@ -175,12 +176,12 @@
   // --- 3. Asset Allocation Pie/Doughnut Chart ---
   function renderAllocationChart(data) {
     const canvas = document.getElementById('allocationChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return; // Safely skip if canvas isn't in HTML
 
-    const dates = Object.keys(data.history);
+    const ctx = canvas.getContext('2d');
+    const dates = Object.keys(data.history || {});
     if (dates.length === 0) return;
-    const latestValues = data.history[dates[dates.length - 1]];
+    const latestValues = data.history[dates[dates.length - 1]] || {};
 
     const tickers = Object.keys(latestValues);
     const values = Object.values(latestValues);
@@ -212,11 +213,11 @@
   // --- 4. Holdings Breakdown Table ---
   function renderHoldingsTable(data) {
     const tableBody = document.getElementById('holdingsTableBody');
-    if (!tableBody) return;
+    if (!tableBody) return; // Safely skip if table body isn't in HTML
 
-    const dates = Object.keys(data.history);
+    const dates = Object.keys(data.history || {});
     if (dates.length === 0) return;
-    const latestValues = data.history[dates[dates.length - 1]];
+    const latestValues = data.history[dates[dates.length - 1]] || {};
     const totalVal = Object.values(latestValues).reduce((sum, v) => sum + v, 0);
 
     tableBody.innerHTML = '';
