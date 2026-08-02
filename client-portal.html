@@ -85,8 +85,12 @@
         document.getElementById('authModal').classList.add('hidden');
         document.getElementById('dashboardContent').classList.remove('hidden');
         document.getElementById('lastUpdated').innerText = `Last Sync: ${decryptedData.last_updated}`;
-        
+      
+        // 6. Render ALL Dashboard Components
+        renderSummaryCards(decryptedData);
         renderChart(decryptedData);
+        renderAllocationChart(decryptedData);
+        renderHoldingsTable(decryptedData);
 
       } catch (e) {
         console.error(e);
