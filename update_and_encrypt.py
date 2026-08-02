@@ -119,7 +119,7 @@ portfolio_payload = {
     "history": history_by_date,
 }
 
-encrypted_output = encrypt_payload(portfolio_payload, SECRET_PASSPHRASE)
+encrypted_output = encrypt_payload(portfolio_payload, PASSPHRASE)
 with open("portfolio_data.enc", "w") as f:
     f.write(encrypted_output)
 
