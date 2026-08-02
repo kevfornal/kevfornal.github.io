@@ -26,10 +26,10 @@ jobs:
 
       - name: Run Update & Encrypt Script
         env:
-          PORTFOLIO_PASSPHRASE: ${{ secrets.portfolio_passphrase }}
+          PORTFOLIO_PASSPHRASE: ${{ secrets.CLIENT_PASSPHRASE }}
         run: |
           python update_and_encrypt.py
-
+      
       - name: Commit and Push Encrypted Output
         run: |
           git config --global user.name "github-actions[bot]"
