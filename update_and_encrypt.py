@@ -14,10 +14,12 @@ import yfinance as yf
 # 1. READ PASSPHRASE FROM ENVIRONMENT / GIT SECRETS
 # ==========================================
 # This reads the secret set in GitHub Actions.
-# If running locally on your computer, it defaults to the fallback password.
-SECRET_PASSPHRASE = os.environ.get(
-    "CLIENT_PASSPHRASE", "YourSuperSecretClientPassphrase123!"
-)
+# Read the environment variable passed in by GitHub Actions
+PASSPHRASE = os.getenv("PORTFOLIO_PASSPHRASE")
+
+# Safety check: throw an explicit error if the secret is missing
+if not PASSPHRASE:
+    raise ValueError("ERROR: PORTFOLIO_PASSPHRASE environment variable is missing! Check your GitHub Actions workflow configuration.")
 
 HOLDINGS = [
     {
