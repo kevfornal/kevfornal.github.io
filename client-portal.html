@@ -45,91 +45,194 @@
   </div>
 
   <script>
-    async function unlockDashboard() {
-      const passphrase = document.getElementById('passphraseInput').value;
-      const errorEl = document.getElementById('authError');
-      errorEl.classList.add('hidden');
+  let portfolioChartInstance = null;
+  let allocationChartInstance = null;
 
-      try {
-        // 1. Fetch encrypted JSON file
-        const res = await fetch('./portfolio_data.enc');
-        if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
-        
-        const encContainer = await res.json();
+  async function unlockDashboard() {
+    const passphrase = document.getElementById('passphraseInput').value;
+    const errorEl = document.getElementById('authError');
+    errorEl.classList.add('hidden');
 
-        // 2. Parse Base64 inputs
-        const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
-        const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
-        const ciphertext = encContainer.ciphertext;
-
-        // 3. Derive key matching Python SHA256 PBKDF2
-        const key = CryptoJS.PBKDF2(passphrase, salt, {
-          keySize: 256 / 32,
-          iterations: 1000,
-          hasher: CryptoJS.algo.SHA256
-        });
-
-        // 4. Decrypt AES-256
-        const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
-          iv: iv,
-          mode: CryptoJS.mode.CBC,
-          padding: CryptoJS.pad.Pkcs7
-        });
-
-        const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-        if (!jsonString) throw new Error("Decryption failed - incorrect key");
-
-        const decryptedData = JSON.parse(jsonString);
-        
-        // 5. Unlock UI
-        document.getElementById('authModal').classList.add('hidden');
-        document.getElementById('dashboardContent').classList.remove('hidden');
-        document.getElementById('lastUpdated').innerText = `Last Sync: ${decryptedData.last_updated}`;
+    try {
+      // 1. Fetch encrypted JSON file
+      const res = await fetch('./portfolio_data.enc');
+      if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
       
-        // 6. Render ALL Dashboard Components
-        renderSummaryCards(decryptedData);
-        renderChart(decryptedData);
-        renderAllocationChart(decryptedData);
-        renderHoldingsTable(decryptedData);
+      const encContainer = await res.json();
 
-      } catch (e) {
-        console.error(e);
-        errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
-        errorEl.classList.remove('hidden');
-      }
-    }
+      // 2. Parse Base64 inputs
+      const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
+      const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
+      const ciphertext = encContainer.ciphertext;
 
-    function renderChart(data) {
-      const ctx = document.getElementById('portfolioChart').getContext('2d');
-      const dates = Object.keys(data.history);
-      
-      const totals = dates.map(d => {
-        return Object.values(data.history[d]).reduce((sum, val) => sum + val, 0);
+      // 3. Derive key matching Python SHA256 PBKDF2
+      const key = CryptoJS.PBKDF2(passphrase, salt, {
+        keySize: 256 / 32,
+        iterations: 1000,
+        hasher: CryptoJS.algo.SHA256
       });
 
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'Total Portfolio Value ($)',
-            data: totals,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
-          }
+      // 4. Decrypt AES-256
+      const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+
+      const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
+      if (!jsonString) throw new Error("Decryption failed - incorrect key");
+
+      const decryptedData = JSON.parse(jsonString);
+      
+      // 5. Unlock UI
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('dashboardContent').classList.remove('hidden');
+      document.getElementById('lastUpdated').innerText = `Last Sync: ${decryptedData.last_updated}`;
+      
+      // 6. Render ALL Dashboard Components
+      renderSummaryCards(decryptedData);
+      renderChart(decryptedData);
+      renderAllocationChart(decryptedData);
+      renderHoldingsTable(decryptedData);
+
+    } catch (e) {
+      console.error(e);
+      errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  // --- 1. KPI Summary Cards ---
+  function renderSummaryCards(data) {
+    const dates = Object.keys(data.history);
+    if (dates.length === 0) return;
+
+    const latestDate = dates[dates.length - 1];
+    const latestValues = data.history[latestDate];
+    const totalVal = Object.values(latestValues).reduce((sum, v) => sum + v, 0);
+
+    let changeVal = 0;
+    let changePct = 0;
+
+    if (dates.length > 1) {
+      const prevDate = dates[dates.length - 2];
+      const prevTotal = Object.values(data.history[prevDate]).reduce((sum, v) => sum + v, 0);
+      changeVal = totalVal - prevTotal;
+      changePct = prevTotal > 0 ? (changeVal / prevTotal) * 100 : 0;
+    }
+
+    const totalEl = document.getElementById('totalValue');
+    const changeEl = document.getElementById('dailyChange');
+
+    if (totalEl) {
+      totalEl.innerText = `$${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (changeEl) {
+      const isPositive = changeVal >= 0;
+      const sign = isPositive ? '+' : '';
+      changeEl.innerText = `${sign}$${changeVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${sign}${changePct.toFixed(2)}%)`;
+      changeEl.className = isPositive ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold';
+    }
+  }
+
+  // --- 2. Portfolio Line Chart ---
+  function renderChart(data) {
+    const canvas = document.getElementById('portfolioChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dates = Object.keys(data.history);
+    
+    const totals = dates.map(d => {
+      return Object.values(data.history[d]).reduce((sum, val) => sum + val, 0);
+    });
+
+    if (portfolioChartInstance) portfolioChartInstance.destroy();
+
+    portfolioChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Total Portfolio Value ($)',
+          data: totals,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          fill: true,
+          tension: 0.2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
         }
-      });
-    }
-  </script>
+      }
+    });
+  }
+
+  // --- 3. Asset Allocation Pie/Doughnut Chart ---
+  function renderAllocationChart(data) {
+    const canvas = document.getElementById('allocationChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const dates = Object.keys(data.history);
+    if (dates.length === 0) return;
+    const latestValues = data.history[dates[dates.length - 1]];
+
+    const tickers = Object.keys(latestValues);
+    const values = Object.values(latestValues);
+
+    if (allocationChartInstance) allocationChartInstance.destroy();
+
+    allocationChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: tickers,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', 
+            '#f59e0b', '#06b6d4', '#64748b', '#f97316'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  // --- 4. Holdings Breakdown Table ---
+  function renderHoldingsTable(data) {
+    const tableBody = document.getElementById('holdingsTableBody');
+    if (!tableBody) return;
+
+    const dates = Object.keys(data.history);
+    if (dates.length === 0) return;
+    const latestValues = data.history[dates[dates.length - 1]];
+    const totalVal = Object.values(latestValues).reduce((sum, v) => sum + v, 0);
+
+    tableBody.innerHTML = '';
+
+    Object.entries(latestValues).forEach(([ticker, val]) => {
+      const weight = totalVal > 0 ? (val / totalVal) * 100 : 0;
+      const row = document.createElement('tr');
+      row.className = 'border-b border-slate-700/50 hover:bg-slate-800/50';
+      row.innerHTML = `
+        <td class="py-3 px-4 font-bold text-slate-200">${ticker}</td>
+        <td class="py-3 px-4 text-right text-slate-300">$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td class="py-3 px-4 text-right text-slate-400">${weight.toFixed(2)}%</td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
+</script>
 </body>
 </html>
