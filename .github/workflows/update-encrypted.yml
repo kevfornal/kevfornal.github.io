@@ -30,10 +30,11 @@ jobs:
         run: |
           python update_and_encrypt.py
 
-      - name: Commit Encrypted Output
+      - name: Commit and Push Encrypted Output
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add portfolio_data.enc
           git commit -m "chore: auto-update encrypted portfolio" || exit 0
+          git pull --rebase origin main
           git push
