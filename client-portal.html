@@ -82,16 +82,51 @@
       </div>
     </div>
 
-    <!-- Add / Track New Ticker Form -->
+    <!-- Add / Track New Asset Form -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
-      <h3 class="text-md font-semibold text-slate-200">Track New Asset</h3>
-      <div class="flex flex-col sm:flex-row gap-3">
-        <input type="text" id="newTickerInput" placeholder="Ticker Symbol (e.g., NVDA, AAPL)" class="uppercase px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500 sm:w-64">
-        <input type="number" id="newValInput" placeholder="Initial Value ($)" class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500 sm:w-48">
-        <button onclick="addCustomTicker()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg transition-colors">Add to View</button>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <h3 class="text-md font-semibold text-slate-200">Track New Asset / Purchase</h3>
+    
+        <!-- Input Mode Toggle (Total Value vs Quantity x Price) -->
+        <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+          <button type="button" id="modeValueBtn" onclick="setEntryMode('value')" class="px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition">Total Value ($)</button>
+          <button type="button" id="modeQtyBtn" onclick="setEntryMode('qty')" class="px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition">Qty & Unit Price</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <!-- Ticker Symbol -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Ticker</label>
+          <input type="text" id="newTickerInput" placeholder="e.g. NVDA, AAPL" class="w-full uppercase px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+    
+        <!-- Date Picker -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
+          <input type="date" id="newDateInput" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+    
+        <!-- Dynamic Field A: Total Value OR Quantity -->
+        <div>
+          <label id="inputLabelA" class="block text-xs font-semibold text-slate-400 mb-1">Total Value ($)</label>
+          <input type="number" step="any" id="inputA" placeholder="Total $'s" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+    
+        <!-- Dynamic Field B: Unit Price (Only active in Qty mode) -->
+        <div id="priceInputWrapper" class="hidden">
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Unit Price ($)</label>
+          <input type="number" step="any" id="inputB" placeholder="Price per share" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+      </div>
+    
+      <div class="flex justify-end pt-1">
+        <button onclick="addCustomTicker()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg transition-colors">
+          Add Purchase Record
+        </button>
       </div>
     </div>
-
+    
     <!-- Holdings Table -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 overflow-x-auto">
       <h3 class="text-md font-semibold text-slate-200 mb-4">Latest Position Values</h3>
