@@ -1,0 +1,105 @@
+<!-- PASSCODE MODAL OVERLAY -->
+<div id="authModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+  <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 max-w-md w-full text-center space-y-6 shadow-2xl">
+    <h2 class="text-2xl font-bold text-slate-100">Unlock Portfolio</h2>
+    <p class="text-sm text-slate-400">Enter your passphrase to decrypt financial data.</p>
+    
+    <input type="password" id="passphraseInput" 
+           class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500" 
+           placeholder="Passphrase">
+           
+    <button onclick="unlockDashboard()" 
+            class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors">
+      Decrypt & View
+    </button>
+    
+    <p id="authError" class="text-rose-400 text-sm hidden"></p>
+  </div>
+</div>
+
+<!-- DASHBOARD CONTENT CONTAINER -->
+<div id="dashboardContent" class="hidden container mx-auto p-4 space-y-6 text-slate-100">
+  <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+    <h1 class="text-2xl font-bold">Portfolio Overview</h1>
+    <span id="lastUpdated" class="text-xs text-slate-400"></span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+      <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Value</span>
+      <div id="totalValue" class="text-3xl font-extrabold text-slate-100 mt-1">$0.00</div>
+    </div>
+    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+      <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">24h Change</span>
+      <div id="dailyChange" class="text-3xl font-extrabold mt-1">$0.00</div>
+    </div>
+  </div>
+
+  <!-- Main Chart Card -->
+  <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+    <h2 class="text-lg font-semibold text-slate-200 mb-4">Performance History</h2>
+    <!-- Relative container with explicit height & touch-action enabled -->
+    <div class="relative h-80 w-full touch-manipulation">
+      <canvas id="portfolioChart" class="w-full h-full pointer-events-auto touch-manipulation"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  let portfolioChartInstance = null;
+
+  function renderChart(data) {
+    const canvas = document.getElementById('portfolioChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const dates = Object.keys(data.history || {});
+    const totals = dates.map(d => Object.values(data.history[d] || {}).reduce((sum, val) => sum + val, 0));
+
+    if (portfolioChartInstance) portfolioChartInstance.destroy();
+
+    portfolioChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Total Value ($)',
+          data: totals,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          fill: true,
+          tension: 0.25,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#10b981'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        // Crucial for Mobile Touch Support
+        interaction: {
+          mode: 'index',
+          intersect: false, // Tap anywhere in column to reveal tooltip
+        },
+        plugins: {
+          tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false,
+            padding: 12,
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleColor: '#94a3b8',
+            bodyColor: '#34d399',
+            bodyFont: { weight: 'bold', size: 14 }
+          }
+        },
+        scales: {
+          x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+</script>
