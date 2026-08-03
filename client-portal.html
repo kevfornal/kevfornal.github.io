@@ -52,7 +52,11 @@
     const passphrase = document.getElementById('passphraseInput').value;
     const errorEl = document.getElementById('authError');
     errorEl.classList.add('hidden');
-
+    // Inside unlockDashboard() after decryption succeeds:
+    const modal = document.getElementById('authModal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none'; // Force display none so it can't intercept touches
+    
     try {
       // 1. Fetch encrypted JSON file
       const res = await fetch('./portfolio_data.enc');
