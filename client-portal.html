@@ -243,11 +243,11 @@
       
       availableTickers.forEach(t => {
         if (!previousSelections.has(t) && previousSelections.size > 0) {
-          // Auto-select newly added assets
           selectedTickers.add(t);
         } else if (previousSelections.size === 0) {
           selectedTickers.add(t);
-        });
+        }
+      });
     }
 
     function setEntryMode(mode) {
