@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <!-- DASHBOARD CONTENT (Constrained Width for Clean Desktop Layout) -->
+  <!-- DASHBOARD CONTENT -->
   <div id="dashboardContent" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
     
     <!-- Top Header -->
@@ -175,6 +175,24 @@
       }
     }
 
+    function refreshAvailableTickers() {
+      const tickerSet = new Set();
+      Object.values(rawPortfolioData.history || {}).forEach(day => {
+        Object.keys(day).forEach(t => tickerSet.add(t));
+      });
+      
+      const previousSelections = new Set(selectedTickers);
+      availableTickers = Array.from(tickerSet);
+      
+      availableTickers.forEach(t => {
+        if (!previousSelections.has(t) && previousSelections.size > 0) {
+          selectedTickers.add(t);
+        } else if (previousSelections.size === 0) {
+          selectedTickers.add(t);
+        }
+      });
+    }
+
     async function unlockDashboard() {
       const passphrase = document.getElementById('passphraseInput').value;
       const errorEl = document.getElementById('authError');
@@ -206,15 +224,12 @@
 
         rawPortfolioData = JSON.parse(jsonString);
         
-        // Ensure default history object
         if (!rawPortfolioData.history) rawPortfolioData.history = {};
 
-        // Default Cash Account line starting March 11, 2020 if history is empty
         if (!rawPortfolioData.history["2020-03-11"]) {
           rawPortfolioData.history["2020-03-11"] = { "Cash Account": 0 };
         }
 
-        // Hide modal & reveal UI
         document.getElementById('authModal').classList.add('hidden');
         document.getElementById('dashboardContent').classList.remove('hidden');
         document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
@@ -223,31 +238,12 @@
         refreshAvailableTickers();
         renderTickerCheckboxes();
         updateDashboard();
-  
+
       } catch (e) {
         console.error(e);
         errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
         errorEl.classList.remove('hidden');
       }
-    }
-    
-    function refreshAvailableTickers() {
-      const tickerSet = new Set();
-      Object.values(rawPortfolioData.history || {}).forEach(day => {
-        Object.keys(day).forEach(t => tickerSet.add(t));
-      });
-      
-      // Preserve active selections when adding new tickers
-      const previousSelections = new Set(selectedTickers);
-      availableTickers = Array.from(tickerSet);
-      
-      availableTickers.forEach(t => {
-        if (!previousSelections.has(t) && previousSelections.size > 0) {
-          selectedTickers.add(t);
-        } else if (previousSelections.size === 0) {
-          selectedTickers.add(t);
-        }
-      });
     }
 
     function setEntryMode(mode) {
@@ -279,16 +275,16 @@
       const inputA = document.getElementById('inputA');
       const inputB = document.getElementById('inputB');
       const actionType = document.getElementById('actionType').value;
-  
+
       const ticker = symbolInput.value.trim().toUpperCase();
       const dateVal = dateInput.value || new Date().toISOString().split('T')[0];
       const valA = parseFloat(inputA.value);
-  
+
       if (!ticker || isNaN(valA)) {
         alert("Please enter a valid ticker symbol and numeric value.");
         return;
       }
-  
+
       let transactionValue = 0;
       if (currentEntryMode === 'value') {
         transactionValue = valA;
@@ -300,32 +296,29 @@
         }
         transactionValue = valA * unitPrice;
       }
-  
-      // Ensure target date exists in history
+
       if (!rawPortfolioData.history[dateVal]) {
         rawPortfolioData.history[dateVal] = {};
       }
-  
-      // Get baseline value from previous closest date if this is a new date
+
       const dates = Object.keys(rawPortfolioData.history).sort();
       const targetIndex = dates.indexOf(dateVal);
       let previousVal = 0;
-  
+
       if (targetIndex > 0) {
         const prevDate = dates[targetIndex - 1];
         previousVal = rawPortfolioData.history[prevDate][ticker] || 0;
       }
-  
+
       let newVal = 0;
       if (actionType === 'BUY') {
         newVal = previousVal + transactionValue;
       } else if (actionType === 'SELL') {
         newVal = Math.max(0, previousVal - transactionValue);
-      } else { // SET
+      } else {
         newVal = transactionValue;
       }
-  
-      // Apply new value to selected date and FORWARD-FILL subsequent dates
+
       for (let i = targetIndex; i < dates.length; i++) {
         const d = dates[i];
         if (!rawPortfolioData.history[d]) rawPortfolioData.history[d] = {};
@@ -341,36 +334,34 @@
           }
         }
       }
-  
-      // Clear inputs
+
       symbolInput.value = '';
       inputA.value = '';
       inputB.value = '';
-  
-      // Refresh, re-select, and render
+
       refreshAvailableTickers();
       selectedTickers.add(ticker);
       renderTickerCheckboxes();
       updateDashboard();
     }
-  
+
     function deleteTicker(ticker) {
       if (!confirm(`Are you sure you want to remove ${ticker}?`)) return;
-  
+
       Object.keys(rawPortfolioData.history).forEach(d => {
         delete rawPortfolioData.history[d][ticker];
       });
-  
+
       selectedTickers.delete(ticker);
       refreshAvailableTickers();
       renderTickerCheckboxes();
       updateDashboard();
     }
-  
+
     function renderTickerCheckboxes() {
       const container = document.getElementById('stockCheckboxes');
       container.innerHTML = '';
-  
+
       availableTickers.forEach(ticker => {
         const label = document.createElement('label');
         label.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${
@@ -387,7 +378,7 @@
         container.appendChild(label);
       });
     }
-  
+
     function toggleTicker(ticker) {
       if (selectedTickers.has(ticker)) {
         selectedTickers.delete(ticker);
@@ -397,7 +388,7 @@
       renderTickerCheckboxes();
       updateDashboard();
     }
-  
+
     function selectAllStocks(shouldSelect) {
       if (shouldSelect) {
         selectedTickers = new Set(availableTickers);
@@ -407,7 +398,7 @@
       renderTickerCheckboxes();
       updateDashboard();
     }
-  
+
     function setTimeframe(tf) {
       selectedTimeframe = tf;
       document.querySelectorAll('.tf-btn').forEach(btn => {
@@ -419,23 +410,23 @@
       });
       updateDashboard();
     }
-  
+
     function updateDashboard() {
       if (!rawPortfolioData || !rawPortfolioData.history) return;
-  
+
       let dates = Object.keys(rawPortfolioData.history).sort();
       if (dates.length === 0) return;
-  
+
       if (selectedTimeframe !== 'ALL') {
         const lastDate = new Date(dates[dates.length - 1]);
         let cutoff = new Date(lastDate);
         if (selectedTimeframe === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
         if (selectedTimeframe === '6M') cutoff.setMonth(cutoff.getMonth() - 6);
         if (selectedTimeframe === '1Y') cutoff.setFullYear(cutoff.getFullYear() - 1);
-  
+
         dates = dates.filter(d => new Date(d) >= cutoff);
       }
-  
+
       const totals = dates.map(d => {
         const dayData = rawPortfolioData.history[d] || {};
         let daySum = 0;
@@ -444,32 +435,32 @@
         });
         return daySum;
       });
-  
+
       const latestTotal = totals.length > 0 ? totals[totals.length - 1] : 0;
       const initialTotal = totals.length > 0 ? totals[0] : 0;
       const periodChange = latestTotal - initialTotal;
       const periodPct = initialTotal > 0 ? (periodChange / initialTotal) * 100 : 0;
-  
+
       document.getElementById('totalValue').innerText = `$${latestTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       
       const changeEl = document.getElementById('dailyChange');
       const sign = periodChange >= 0 ? '+' : '';
       changeEl.innerText = `${sign}$${periodChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${sign}${periodPct.toFixed(2)}%)`;
       changeEl.className = periodChange >= 0 ? 'text-2xl md:text-3xl font-extrabold mt-1 text-emerald-400' : 'text-2xl md:text-3xl font-extrabold mt-1 text-rose-400';
-  
+
       renderChart(dates, totals);
       renderHoldingsTable(latestTotal);
     }
-  
+
     function renderChart(dates, totals) {
       const canvas = document.getElementById('portfolioChart');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-  
+
       if (chartInstance) {
         chartInstance.destroy();
       }
-  
+
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -506,21 +497,21 @@
         }
       });
     }
-  
+
     function renderHoldingsTable(totalPortfolioValue) {
       const tableBody = document.getElementById('holdingsTableBody');
       if (!tableBody) return;
       tableBody.innerHTML = '';
-  
+
       const dates = Object.keys(rawPortfolioData.history || {}).sort();
       if (dates.length === 0) return;
       const latestDay = rawPortfolioData.history[dates[dates.length - 1]] || {};
-  
+
       availableTickers.forEach(ticker => {
         const val = latestDay[ticker] || 0;
         const isSelected = selectedTickers.has(ticker);
         const weight = totalPortfolioValue > 0 && isSelected ? (val / totalPortfolioValue) * 100 : 0;
-  
+
         const row = document.createElement('tr');
         row.className = isSelected ? 'hover:bg-slate-800/40' : 'opacity-40 hover:bg-slate-800/20';
         row.innerHTML = `
@@ -542,3 +533,5 @@
       });
     }
   </script>
+</body>
+</html>
