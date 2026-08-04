@@ -220,25 +220,23 @@
         document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
         
         setDefaultDate();
-
-        // Discover available tickers across history
         refreshAvailableTickers();
-
         renderTickerCheckboxes();
         updateDashboard();
-
+  
       } catch (e) {
         console.error(e);
         errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
         errorEl.classList.remove('hidden');
       }
     }
-
+    
     function refreshAvailableTickers() {
       const tickerSet = new Set();
       Object.values(rawPortfolioData.history || {}).forEach(day => {
         Object.keys(day).forEach(t => tickerSet.add(t));
       });
+      
       // Preserve active selections when adding new tickers
       const previousSelections = new Set(selectedTickers);
       availableTickers = Array.from(tickerSet);
@@ -249,7 +247,7 @@
           selectedTickers.add(t);
         } else if (previousSelections.size === 0) {
           selectedTickers.add(t);
-        }
+        });
     }
 
     function setEntryMode(mode) {
