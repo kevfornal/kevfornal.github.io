@@ -239,8 +239,17 @@
       Object.values(rawPortfolioData.history || {}).forEach(day => {
         Object.keys(day).forEach(t => tickerSet.add(t));
       });
+      // Preserve active selections when adding new tickers
+      const previousSelections = new Set(selectedTickers);
       availableTickers = Array.from(tickerSet);
-      selectedTickers = new Set(availableTickers);
+      
+      availableTickers.forEach(t => {
+        if (!previousSelections.has(t) && previousSelections.size > 0) {
+          // Auto-select newly added assets
+          selectedTickers.add(t);
+        } else if (previousSelections.size === 0) {
+          selectedTickers.add(t);
+        }
     }
 
     function setEntryMode(mode) {
@@ -277,40 +286,76 @@
       const dateVal = dateInput.value || new Date().toISOString().split('T')[0];
       const valA = parseFloat(inputA.value);
 
-      if (!ticker || isNaN(valA)) return;
+      if (!ticker || isNaN(valA)) {
+        alert("Please enter a valid ticker symbol and numeric value.");
+        return;
+      }
 
       let transactionValue = 0;
       if (currentEntryMode === 'value') {
         transactionValue = valA;
       } else {
         const unitPrice = parseFloat(inputB.value);
-        if (isNaN(unitPrice)) return;
+        if (isNaN(unitPrice)) {
+          alert("Please enter a valid unit price.");
+          return;
+        }
         transactionValue = valA * unitPrice;
       }
 
+      // Ensure target date exists in history
       if (!rawPortfolioData.history[dateVal]) {
         rawPortfolioData.history[dateVal] = {};
       }
 
-      const existingVal = rawPortfolioData.history[dateVal][ticker] || 0;
-
-      if (actionType === 'BUY') {
-        rawPortfolioData.history[dateVal][ticker] = existingVal + transactionValue;
-      } else if (actionType === 'SELL') {
-        rawPortfolioData.history[dateVal][ticker] = Math.max(0, existingVal - transactionValue);
-      } else { // SET
-        rawPortfolioData.history[dateVal][ticker] = transactionValue;
+      // Get baseline value from previous closest date if this is a new date
+      const dates = Object.keys(rawPortfolioData.history).sort();
+      const targetIndex = dates.indexOf(dateVal);
+      let previousVal = 0;
+  
+      if (targetIndex > 0) {
+        const prevDate = dates[targetIndex - 1];
+        previousVal = rawPortfolioData.history[prevDate][ticker] || 0;
       }
-
-      refreshAvailableTickers();
-      renderTickerCheckboxes();
-      updateDashboard();
-
+  
+      let newVal = 0;
+      if (actionType === 'BUY') {
+        newVal = previousVal + transactionValue;
+      } else if (actionType === 'SELL') {
+        newVal = Math.max(0, previousVal - transactionValue);
+      } else { // SET
+        newVal = transactionValue;
+      }
+  
+      // Apply new value to selected date and FORWARD-FILL subsequent dates
+      for (let i = targetIndex; i < dates.length; i++) {
+        const d = dates[i];
+        if (!rawPortfolioData.history[d]) rawPortfolioData.history[d] = {};
+        
+        if (actionType === 'SET') {
+          rawPortfolioData.history[d][ticker] = newVal;
+        } else {
+          const currentDayVal = rawPortfolioData.history[d][ticker] || previousVal;
+          if (actionType === 'BUY') {
+            rawPortfolioData.history[d][ticker] = currentDayVal + transactionValue;
+          } else if (actionType === 'SELL') {
+            rawPortfolioData.history[d][ticker] = Math.max(0, currentDayVal - transactionValue);
+          }
+        }
+      }
+  
+      // Clear inputs
       symbolInput.value = '';
       inputA.value = '';
       inputB.value = '';
+  
+      // Refresh, re-select, and render
+      refreshAvailableTickers();
+      selectedTickers.add(ticker);
+      renderTickerCheckboxes();
+      updateDashboard();
     }
-
+      
     function deleteTicker(ticker) {
       if (!confirm(`Are you sure you want to remove ${ticker}?`)) return;
 
@@ -318,6 +363,7 @@
         delete rawPortfolioData.history[d][ticker];
       });
 
+      selectedTickers.delete(ticker);
       refreshAvailableTickers();
       renderTickerCheckboxes();
       updateDashboard();
