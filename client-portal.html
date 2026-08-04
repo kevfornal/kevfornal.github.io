@@ -150,61 +150,67 @@
       const passphrase = document.getElementById('passphraseInput').value;
       const errorEl = document.getElementById('authError');
       errorEl.classList.add('hidden');
-
+    
+      if (!passphrase) {
+        errorEl.innerText = "Please enter a passphrase.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+    
       try {
         const res = await fetch('./portfolio_data.enc');
-        if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}: Could not load portfolio_data.enc file.`);
         
         const encContainer = await res.json();
+    
+        // Verify required JSON keys exist
+        if (!encContainer.ciphertext || !encContainer.salt || !encContainer.iv) {
+          throw new Error("Invalid portfolio_data.enc structure. Missing salt, iv, or ciphertext.");
+        }
+    
         const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
         const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
         const ciphertext = encContainer.ciphertext;
-
+    
         const key = CryptoJS.PBKDF2(passphrase, salt, {
           keySize: 256 / 32,
           iterations: 1000,
           hasher: CryptoJS.algo.SHA256
         });
-
+    
         const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
           iv: iv,
           mode: CryptoJS.mode.CBC,
           padding: CryptoJS.pad.Pkcs7
         });
-
+    
         const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-        if (!jsonString) throw new Error("Decryption failed - incorrect passphrase.");
-
+        if (!jsonString) throw new Error("Incorrect passphrase or decryption failed.");
+    
         rawPortfolioData = JSON.parse(jsonString);
         
-        // 1. Hide modal & reveal UI
-        const modal = document.getElementById('authModal');
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
+        // Hide modal & reveal UI
+        document.getElementById('authModal').classList.add('hidden');
         document.getElementById('dashboardContent').classList.remove('hidden');
         document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
         
-        setDefaultDate();
-
-        // 2. Discover available tickers across all history
+        // Discover available tickers
         const tickerSet = new Set();
         Object.values(rawPortfolioData.history || {}).forEach(day => {
           Object.keys(day).forEach(t => tickerSet.add(t));
         });
         availableTickers = Array.from(tickerSet);
         selectedTickers = new Set(availableTickers);
-
-        // 3. Render UI components
+    
         renderTickerCheckboxes();
         updateDashboard();
-
+    
       } catch (e) {
-        console.error(e);
+        console.error("Unlock Error:", e);
         errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
         errorEl.classList.remove('hidden');
       }
     }
-
     // --- Mode Toggle Handler ---
     function setEntryMode(mode) {
       currentEntryMode = mode;
