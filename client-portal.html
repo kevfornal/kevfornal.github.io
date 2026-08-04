@@ -10,7 +10,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-  <!-- UNLOCK MODAL -->
   <div id="authModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 max-w-md w-full text-center space-y-6 shadow-2xl">
       <h2 class="text-2xl font-bold text-slate-100">Unlock Dashboard</h2>
@@ -29,17 +28,14 @@
     </div>
   </div>
 
-  <!-- DASHBOARD CONTENT -->
   <div id="dashboardContent" class="hidden container mx-auto p-4 md:p-8 space-y-6">
     
-    <!-- Top Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
       <div>
         <h1 class="text-3xl font-extrabold text-slate-100">Portfolio Tracker</h1>
         <p id="lastUpdated" class="text-xs text-slate-400 mt-1"></p>
       </div>
       
-      <!-- Timeframe Selector -->
       <div class="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800" id="timeframeContainer">
         <button onclick="setTimeframe('1M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="1M">1M</button>
         <button onclick="setTimeframe('6M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="6M">6M</button>
@@ -48,7 +44,6 @@
       </div>
     </div>
 
-    <!-- Summary KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
         <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Displayed Total Value</span>
@@ -60,7 +55,6 @@
       </div>
     </div>
 
-    <!-- Interactive Stock Toggle Filters -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Filter Displayed Stocks</h3>
@@ -71,23 +65,19 @@
         </div>
       </div>
       <div id="stockCheckboxes" class="flex flex-wrap gap-2 pt-1">
-        <!-- Checkboxes injected dynamically -->
-      </div>
+        </div>
     </div>
 
-    <!-- Main Performance Chart -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
       <div class="relative h-96 w-full">
         <canvas id="portfolioChart"></canvas>
       </div>
     </div>
 
-    <!-- Track New Asset Form -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <h3 class="text-md font-semibold text-slate-200">Track New Asset / Purchase</h3>
         
-        <!-- Entry Mode Toggle -->
         <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
           <button type="button" id="modeValueBtn" onclick="setEntryMode('value')" class="px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition">Total Value ($)</button>
           <button type="button" id="modeQtyBtn" onclick="setEntryMode('qty')" class="px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition">Qty & Price</button>
@@ -95,25 +85,21 @@
       </div>
     
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <!-- Ticker Symbol -->
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Ticker</label>
           <input type="text" id="newTickerInput" placeholder="e.g. NVDA, AAPL" class="w-full uppercase px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
     
-        <!-- Date Picker -->
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
           <input type="date" id="newDateInput" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
     
-        <!-- Field A: Total Value OR Quantity -->
         <div>
           <label id="inputLabelA" class="block text-xs font-semibold text-slate-400 mb-1">Total Value ($)</label>
           <input type="number" step="any" id="inputA" placeholder="Total $'s" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
     
-        <!-- Field B: Unit Price (Hidden by default) -->
         <div id="priceInputWrapper" class="hidden">
           <label class="block text-xs font-semibold text-slate-400 mb-1">Unit Price ($)</label>
           <input type="number" step="any" id="inputB" placeholder="Price per share" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
@@ -127,7 +113,6 @@
       </div>
     </div>
     
-    <!-- Holdings Table with Delete Actions -->
     <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 overflow-x-auto">
       <h3 class="text-md font-semibold text-slate-200 mb-4">Latest Position Values</h3>
       <table class="w-full text-left border-collapse">
@@ -140,25 +125,7 @@
           </tr>
         </thead>
         <tbody id="holdingsTableBody" class="divide-y divide-slate-800/50 text-sm">
-          <!-- Dynamic rows with delete buttons -->
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Holdings Table -->
-    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 overflow-x-auto">
-      <h3 class="text-md font-semibold text-slate-200 mb-4">Latest Position Values</h3>
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
-            <th class="py-3 px-4">Symbol</th>
-            <th class="py-3 px-4 text-right">Latest Value</th>
-            <th class="py-3 px-4 text-right">Portfolio Share</th>
-          </tr>
-        </thead>
-        <tbody id="holdingsTableBody" class="divide-y divide-slate-800/50 text-sm">
-          <!-- Rows injected dynamically -->
-        </tbody>
+          </tbody>
       </table>
     </div>
 
@@ -170,6 +137,14 @@
     let selectedTickers = new Set();
     let selectedTimeframe = 'ALL';
     let chartInstance = null;
+    let currentEntryMode = 'value'; // 'value' or 'qty'
+
+    function setDefaultDate() {
+      const dateInput = document.getElementById('newDateInput');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+    }
 
     async function unlockDashboard() {
       const passphrase = document.getElementById('passphraseInput').value;
@@ -209,6 +184,8 @@
         document.getElementById('dashboardContent').classList.remove('hidden');
         document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
         
+        setDefaultDate();
+
         // 2. Discover available tickers across all history
         const tickerSet = new Set();
         Object.values(rawPortfolioData.history || {}).forEach(day => {
@@ -228,76 +205,61 @@
       }
     }
 
-    // --- Ticker Filter Controls ---
-    function renderTickerCheckboxes() {
-      const container = document.getElementById('stockCheckboxes');
-      container.innerHTML = '';
+    // --- Mode Toggle Handler ---
+    function setEntryMode(mode) {
+      currentEntryMode = mode;
+      const valueBtn = document.getElementById('modeValueBtn');
+      const qtyBtn = document.getElementById('modeQtyBtn');
+      const labelA = document.getElementById('inputLabelA');
+      const inputA = document.getElementById('inputA');
+      const priceWrapper = document.getElementById('priceInputWrapper');
 
-      availableTickers.forEach(ticker => {
-        const label = document.createElement('label');
-        label.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${
-          selectedTickers.has(ticker) 
-            ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300' 
-            : 'bg-slate-950 border-slate-800 text-slate-500'
-        }`;
-        
-        label.innerHTML = `
-          <input type="checkbox" value="${ticker}" ${selectedTickers.has(ticker) ? 'checked' : ''} 
-                 onchange="toggleTicker('${ticker}')" class="hidden">
-          <span>${ticker}</span>
-        `;
-        container.appendChild(label);
-      });
-    }
+      if (!valueBtn || !qtyBtn || !labelA || !priceWrapper) return;
 
-    function toggleTicker(ticker) {
-      if (selectedTickers.has(ticker)) {
-        selectedTickers.delete(ticker);
+      if (mode === 'value') {
+        valueBtn.className = 'px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition';
+        qtyBtn.className = 'px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition';
+        labelA.innerText = 'Total Value ($)';
+        inputA.placeholder = "Total $'s";
+        priceWrapper.classList.add('hidden');
       } else {
-        selectedTickers.add(ticker);
+        qtyBtn.className = 'px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition';
+        valueBtn.className = 'px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition';
+        labelA.innerText = 'Quantity Shares/Units';
+        inputA.placeholder = 'e.g. 10.5';
+        priceWrapper.classList.remove('hidden');
       }
-      renderTickerCheckboxes();
-      updateDashboard();
     }
 
-    function selectAllStocks(shouldSelect) {
-      if (shouldSelect) {
-        selectedTickers = new Set(availableTickers);
-      } else {
-        selectedTickers.clear();
-      }
-      renderTickerCheckboxes();
-      updateDashboard();
-    }
-
-    // --- Timeframe Filter Controls ---
-    function setTimeframe(tf) {
-      selectedTimeframe = tf;
-      document.querySelectorAll('.tf-btn').forEach(btn => {
-        if (btn.getAttribute('data-tf') === tf) {
-          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md transition';
-        } else {
-          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition';
-        }
-      });
-      updateDashboard();
-    }
-
-    // --- Custom Ticker Addition ---
+    // --- Add Asset Handler ---
     function addCustomTicker() {
       const symbolInput = document.getElementById('newTickerInput');
-      const valInput = document.getElementById('newValInput');
+      const dateInput = document.getElementById('newDateInput');
+      const inputA = document.getElementById('inputA');
+      const inputB = document.getElementById('inputB');
+
       const ticker = symbolInput.value.trim().toUpperCase();
-      const val = parseFloat(valInput.value);
+      const dateVal = dateInput.value || new Date().toISOString().split('T')[0];
+      const valA = parseFloat(inputA.value);
 
-      if (!ticker || isNaN(val)) return;
+      if (!ticker || isNaN(valA)) return;
 
-      const dates = Object.keys(rawPortfolioData.history || {});
-      if (dates.length === 0) return;
+      let calculatedTotalValue = 0;
 
-      // Add to latest date entry
-      const latestDate = dates[dates.length - 1];
-      rawPortfolioData.history[latestDate][ticker] = val;
+      if (currentEntryMode === 'value') {
+        calculatedTotalValue = valA;
+      } else {
+        const unitPrice = parseFloat(inputB.value);
+        if (isNaN(unitPrice)) return;
+        calculatedTotalValue = valA * unitPrice; // Qty * Price
+      }
+
+      if (!rawPortfolioData.history) rawPortfolioData.history = {};
+      if (!rawPortfolioData.history[dateVal]) {
+        rawPortfolioData.history[dateVal] = {};
+      }
+
+      rawPortfolioData.history[dateVal][ticker] = calculatedTotalValue;
 
       if (!availableTickers.includes(ticker)) {
         availableTickers.push(ticker);
@@ -305,131 +267,13 @@
       selectedTickers.add(ticker);
 
       symbolInput.value = '';
-      valInput.value = '';
+      inputA.value = '';
+      inputB.value = '';
 
       renderTickerCheckboxes();
       updateDashboard();
     }
 
-    // --- Main Calculation & Redraw Engine ---
-    function updateDashboard() {
-      if (!rawPortfolioData || !rawPortfolioData.history) return;
-
-      let dates = Object.keys(rawPortfolioData.history).sort();
-      if (dates.length === 0) return;
-
-      // Filter dates based on selected Timeframe
-      if (selectedTimeframe !== 'ALL') {
-        const lastDate = new Date(dates[dates.length - 1]);
-        let cutoff = new Date(lastDate);
-        if (selectedTimeframe === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
-        if (selectedTimeframe === '6M') cutoff.setMonth(cutoff.getMonth() - 6);
-        if (selectedTimeframe === '1Y') cutoff.setFullYear(cutoff.getFullYear() - 1);
-
-        dates = dates.filter(d => new Date(d) >= cutoff);
-      }
-
-      // Calculate totals for selected tickers across filtered dates
-      const totals = dates.map(d => {
-        const dayData = rawPortfolioData.history[d] || {};
-        let daySum = 0;
-        selectedTickers.forEach(t => {
-          daySum += (dayData[t] || 0);
-        });
-        return daySum;
-      });
-
-      // Update KPI Cards
-      const latestTotal = totals.length > 0 ? totals[totals.length - 1] : 0;
-      const initialTotal = totals.length > 0 ? totals[0] : 0;
-      const periodChange = latestTotal - initialTotal;
-      const periodPct = initialTotal > 0 ? (periodChange / initialTotal) * 100 : 0;
-
-      document.getElementById('totalValue').innerText = `$${latestTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      
-      const changeEl = document.getElementById('dailyChange');
-      const sign = periodChange >= 0 ? '+' : '';
-      changeEl.innerText = `${sign}$${periodChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${sign}${periodPct.toFixed(2)}%)`;
-      changeEl.className = periodChange >= 0 ? 'text-emerald-400 font-extrabold text-3xl mt-1' : 'text-rose-400 font-extrabold text-3xl mt-1';
-
-      // Update Chart
-      renderChart(dates, totals);
-
-      // Update Holdings Table
-      renderHoldingsTable(latestTotal);
-    }
-
-    function renderChart(dates, totals) {
-      const canvas = document.getElementById('portfolioChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'Selected Portfolio Value ($)',
-            data: totals,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.2,
-            pointRadius: 3,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#10b981'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: (ctx) => ` Value: $${(ctx.parsed.y || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-              }
-            }
-          },
-          scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => '$' + v.toLocaleString() } }
-          }
-        }
-      });
-    }
-
-    function renderHoldingsTable(totalPortfolioValue) {
-      const tableBody = document.getElementById('holdingsTableBody');
-      if (!tableBody) return;
-      tableBody.innerHTML = '';
-
-      const dates = Object.keys(rawPortfolioData.history || {}).sort();
-      if (dates.length === 0) return;
-      const latestDay = rawPortfolioData.history[dates[dates.length - 1]] || {};
-
-      availableTickers.forEach(ticker => {
-        const val = latestDay[ticker] || 0;
-        const isSelected = selectedTickers.has(ticker);
-        const weight = totalPortfolioValue > 0 && isSelected ? (val / totalPortfolioValue) * 100 : 0;
-
-        const row = document.createElement('tr');
-        row.className = isSelected ? 'hover:bg-slate-800/40' : 'opacity-40 hover:bg-slate-800/20';
-        row.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-200 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
-            ${ticker}
-          </td>
-          <td class="py-3 px-4 text-right text-slate-300 font-mono">$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-          <td class="py-3 px-4 text-right text-slate-400 font-mono">${isSelected ? weight.toFixed(2) + '%' : 'Excluded'}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-  </script>
-</body>
-</html>
+    // --- Delete Asset Handler ---
+    function deleteTicker(ticker) {
+      if (!confirm(`Are you sure you want to remove ${ticker} from this session
