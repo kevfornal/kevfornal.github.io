@@ -1,432 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-  <!-- UNLOCK MODAL -->
-  <div id="authModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 max-w-md w-full text-center space-y-6 shadow-2xl">
-      <h2 class="text-2xl font-bold text-slate-100">Unlock Dashboard</h2>
-      <p class="text-sm text-slate-400">Enter your passphrase to decrypt financial data.</p>
-     
-      <input type="password" id="passphraseInput"
-             class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500"
-             placeholder="Passphrase" onkeydown="if(event.key==='Enter') unlockDashboard()">
-             
-      <button onclick="unlockDashboard()"
-              class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors">
-        Decrypt & View
-      </button>
-     
-      <p id="authError" class="text-rose-400 text-sm hidden"></p>
-    </div>
-  </div>
+  <!-- UNLOCK MODAL -->
+  <div id="authModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 max-w-md w-full text-center space-y-6 shadow-2xl">
+      <h2 class="text-2xl font-bold text-slate-100">Unlock Dashboard</h2>
+      <p class="text-sm text-slate-400">Enter your passphrase to decrypt financial data.</p>
+      
+      <input type="password" id="passphraseInput" 
+             class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500" 
+             placeholder="Passphrase" onkeydown="if(event.key==='Enter') unlockDashboard()">
+             
+      <button onclick="unlockDashboard()" 
+              class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors">
+        Decrypt & View
+      </button>
+      
+      <p id="authError" class="text-rose-400 text-sm hidden"></p>
+    </div>
+  </div>
 
-  <!-- DASHBOARD CONTENT -->
-  <div id="dashboardContent" class="hidden container mx-auto p-4 md:p-8 space-y-6">
-   
-    <!-- Top Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
-      <div>
-        <h1 class="text-3xl font-extrabold text-slate-100">Portfolio Tracker</h1>
-        <p id="lastUpdated" class="text-xs text-slate-400 mt-1"></p>
-      </div>
-     
-      <!-- Timeframe Selector -->
-      <div class="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800" id="timeframeContainer">
-        <button onclick="setTimeframe('1M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="1M">1M</button>
-        <button onclick="setTimeframe('6M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="6M">6M</button>
-        <button onclick="setTimeframe('1Y')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="1Y">1Y</button>
-        <button onclick="setTimeframe('ALL')" class="tf-btn px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md transition" data-tf="ALL">ALL</button>
-      </div>
-    </div>
+  <!-- DASHBOARD CONTENT (Constrained Width for Clean Desktop Layout) -->
+  <div id="dashboardContent" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+    
+    <!-- Top Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-100">Portfolio Tracker</h1>
+        <p id="lastUpdated" class="text-xs text-slate-400 mt-1"></p>
+      </div>
+      
+      <!-- Timeframe Selector -->
+      <div class="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800" id="timeframeContainer">
+        <button onclick="setTimeframe('1M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="1M">1M</button>
+        <button onclick="setTimeframe('6M')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="6M">6M</button>
+        <button onclick="setTimeframe('1Y')" class="tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition" data-tf="1Y">1Y</button>
+        <button onclick="setTimeframe('ALL')" class="tf-btn px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md transition" data-tf="ALL">ALL</button>
+      </div>
+    </div>
 
-    <!-- Summary KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-        <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Displayed Total Value</span>
-        <div id="totalValue" class="text-3xl font-extrabold text-slate-100 mt-1">$0.00</div>
-      </div>
-      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-        <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Period Change</span>
-        <div id="dailyChange" class="text-3xl font-extrabold mt-1">$0.00</div>
-      </div>
-    </div>
+    <!-- Summary KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+        <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Displayed Total Value</span>
+        <div id="totalValue" class="text-2xl md:text-3xl font-extrabold text-slate-100 mt-1">$0.00</div>
+      </div>
+      <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+        <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Period Change</span>
+        <div id="dailyChange" class="text-2xl md:text-3xl font-extrabold mt-1">$0.00</div>
+      </div>
+    </div>
 
-    <!-- Interactive Stock Toggle Filters -->
-    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Filter Displayed Stocks</h3>
-        <div class="space-x-2 text-xs">
-          <button onclick="selectAllStocks(true)" class="text-emerald-400 hover:underline">Select All</button>
-          <span class="text-slate-600">|</span>
-          <button onclick="selectAllStocks(false)" class="text-slate-400 hover:underline">Deselect All</button>
-        </div>
-      </div>
-      <div id="stockCheckboxes" class="flex flex-wrap gap-2 pt-1">
-        <!-- Checkboxes injected dynamically -->
-      </div>
-    </div>
+    <!-- Interactive Stock Toggle Filters -->
+    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Filter Displayed Assets</h3>
+        <div class="space-x-2 text-xs">
+          <button onclick="selectAllStocks(true)" class="text-emerald-400 hover:underline">Select All</button>
+          <span class="text-slate-600">|</span>
+          <button onclick="selectAllStocks(false)" class="text-slate-400 hover:underline">Deselect All</button>
+        </div>
+      </div>
+      <div id="stockCheckboxes" class="flex flex-wrap gap-2 pt-1">
+        <!-- Checkboxes injected dynamically -->
+      </div>
+    </div>
 
-    <!-- Main Performance Chart -->
-    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-      <div class="relative h-96 w-full">
-        <canvas id="portfolioChart"></canvas>
-      </div>
-    </div>
+    <!-- Main Performance Chart -->
+    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+      <div class="relative h-80 md:h-96 w-full">
+        <canvas id="portfolioChart"></canvas>
+      </div>
+    </div>
 
-    <!-- Add / Track New Asset Form -->
-    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <h3 class="text-md font-semibold text-slate-200">Track New Asset / Purchase</h3>
-   
-        <!-- Input Mode Toggle (Total Value vs Quantity x Price) -->
-        <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-          <button type="button" id="modeValueBtn" onclick="setEntryMode('value')" class="px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition">Total Value ($)</button>
-          <button type="button" id="modeQtyBtn" onclick="setEntryMode('qty')" class="px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition">Qty & Unit Price</button>
-        </div>
-      </div>
+    <!-- Add / Track / Modify Asset Transactions -->
+    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h3 class="text-sm font-semibold text-slate-200">Record Transaction / Adjust Position</h3>
+          <p class="text-xs text-slate-400">Log buys, sells, or custom valuation changes.</p>
+        </div>
+        
+        <!-- Input Mode Toggle -->
+        <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+          <button type="button" id="modeValueBtn" onclick="setEntryMode('value')" class="px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition">Total ($)</button>
+          <button type="button" id="modeQtyBtn" onclick="setEntryMode('qty')" class="px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition">Qty & Price</button>
+        </div>
+      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <!-- Ticker Symbol -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Ticker</label>
-          <input type="text" id="newTickerInput" placeholder="e.g. NVDA, AAPL" class="w-full uppercase px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-        </div>
-   
-        <!-- Date Picker -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
-          <input type="date" id="newDateInput" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-        </div>
-   
-        <!-- Dynamic Field A: Total Value OR Quantity -->
-        <div>
-          <label id="inputLabelA" class="block text-xs font-semibold text-slate-400 mb-1">Total Value ($)</label>
-          <input type="number" step="any" id="inputA" placeholder="Total $'s" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-        </div>
-   
-        <!-- Dynamic Field B: Unit Price (Only active in Qty mode) -->
-        <div id="priceInputWrapper" class="hidden">
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Unit Price ($)</label>
-          <input type="number" step="any" id="inputB" placeholder="Price per share" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-        </div>
-      </div>
-   
-      <div class="flex justify-end pt-1">
-        <button onclick="addCustomTicker()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg transition-colors">
-          Add Purchase Record
-        </button>
-      </div>
-    </div>
-   
-    <!-- Holdings Table -->
-    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 overflow-x-auto">
-      <h3 class="text-md font-semibold text-slate-200 mb-4">Latest Position Values</h3>
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
-            <th class="py-3 px-4">Symbol</th>
-            <th class="py-3 px-4 text-right">Latest Value</th>
-            <th class="py-3 px-4 text-right">Portfolio Share</th>
-          </tr>
-        </thead>
-        <tbody id="holdingsTableBody" class="divide-y divide-slate-800/50 text-sm">
-          <!-- Rows injected dynamically -->
-        </tbody>
-      </table>
-    </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <!-- Transaction Type -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Action</label>
+          <select id="actionType" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+            <option value="BUY">BUY (+)</option>
+            <option value="SELL">SELL (-)</option>
+            <option value="SET">SET Total (=)</option>
+          </select>
+        </div>
 
-  </div>
+        <!-- Ticker Symbol -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Ticker</label>
+          <input type="text" id="newTickerInput" placeholder="e.g. NVDA, Cash Account" class="w-full uppercase px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
 
-  <script>
-    let rawPortfolioData = null;
-    let availableTickers = [];
-    let selectedTickers = new Set();
-    let selectedTimeframe = 'ALL';
-    let chartInstance = null;
+        <!-- Date Picker -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
+          <input type="date" id="newDateInput" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
 
-    async function unlockDashboard() {
-      const passphrase = document.getElementById('passphraseInput').value;
-      const errorEl = document.getElementById('authError');
-      errorEl.classList.add('hidden');
+        <!-- Dynamic Field A -->
+        <div>
+          <label id="inputLabelA" class="block text-xs font-semibold text-slate-400 mb-1">Total Value ($)</label>
+          <input type="number" step="any" id="inputA" placeholder="$ Amount" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
 
-      try {
-        const res = await fetch('./portfolio_data.enc');
-        if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
-       
-        const encContainer = await res.json();
-        const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
-        const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
-        const ciphertext = encContainer.ciphertext;
+        <!-- Dynamic Field B (Only active in Qty mode) -->
+        <div id="priceInputWrapper" class="hidden">
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Unit Price ($)</label>
+          <input type="number" step="any" id="inputB" placeholder="Price / share" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+      </div>
 
-        const key = CryptoJS.PBKDF2(passphrase, salt, {
-          keySize: 256 / 32,
-          iterations: 1000,
-          hasher: CryptoJS.algo.SHA256
-        });
+      <div class="flex justify-end pt-1">
+        <button onclick="addCustomTicker()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg transition-colors">
+          Record Position
+        </button>
+      </div>
+    </div>
+    
+    <!-- Holdings Table -->
+    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 overflow-x-auto">
+      <h3 class="text-sm font-semibold text-slate-200 mb-4">Current Asset Positions</h3>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+            <th class="py-3 px-4">Symbol</th>
+            <th class="py-3 px-4 text-right">Latest Value</th>
+            <th class="py-3 px-4 text-right">Portfolio Share</th>
+            <th class="py-3 px-4 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="holdingsTableBody" class="divide-y divide-slate-800/50 text-sm">
+          <!-- Rows injected dynamically -->
+        </tbody>
+      </table>
+    </div>
 
-        const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
-          iv: iv,
-          mode: CryptoJS.mode.CBC,
-          padding: CryptoJS.pad.Pkcs7
-        });
+  </div>
 
-        const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
-        if (!jsonString) throw new Error("Decryption failed - incorrect passphrase.");
+  <script>
+    let rawPortfolioData = null;
+    let availableTickers = [];
+    let selectedTickers = new Set();
+    let selectedTimeframe = 'ALL';
+    let chartInstance = null;
+    let currentEntryMode = 'value'; // 'value' or 'qty'
 
-        rawPortfolioData = JSON.parse(jsonString);
-       
-        // 1. Hide modal & reveal UI
-        const modal = document.getElementById('authModal');
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-        document.getElementById('dashboardContent').classList.remove('hidden');
-        document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
-       
-        // 2. Discover available tickers across all history
-        const tickerSet = new Set();
-        Object.values(rawPortfolioData.history || {}).forEach(day => {
-          Object.keys(day).forEach(t => tickerSet.add(t));
-        });
-        availableTickers = Array.from(tickerSet);
-        selectedTickers = new Set(availableTickers);
+    function setDefaultDate() {
+      const dateInput = document.getElementById('newDateInput');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+    }
 
-        // 3. Render UI components
-        renderTickerCheckboxes();
-        updateDashboard();
+    async function unlockDashboard() {
+      const passphrase = document.getElementById('passphraseInput').value;
+      const errorEl = document.getElementById('authError');
+      errorEl.classList.add('hidden');
 
-      } catch (e) {
-        console.error(e);
-        errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
-        errorEl.classList.remove('hidden');
-      }
-    }
+      try {
+        const res = await fetch('./portfolio_data.enc');
+        if (!res.ok) throw new Error("Could not find portfolio_data.enc file");
+        
+        const encContainer = await res.json();
+        const salt = CryptoJS.enc.Base64.parse(encContainer.salt);
+        const iv = CryptoJS.enc.Base64.parse(encContainer.iv);
+        const ciphertext = encContainer.ciphertext;
 
-    // --- Ticker Filter Controls ---
-    function renderTickerCheckboxes() {
-      const container = document.getElementById('stockCheckboxes');
-      container.innerHTML = '';
+        const key = CryptoJS.PBKDF2(passphrase, salt, {
+          keySize: 256 / 32,
+          iterations: 1000,
+          hasher: CryptoJS.algo.SHA256
+        });
 
-      availableTickers.forEach(ticker => {
-        const label = document.createElement('label');
-        label.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${
-          selectedTickers.has(ticker)
-            ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
-            : 'bg-slate-950 border-slate-800 text-slate-500'
-        }`;
-       
-        label.innerHTML = `
-          <input type="checkbox" value="${ticker}" ${selectedTickers.has(ticker) ? 'checked' : ''}
-                 onchange="toggleTicker('${ticker}')" class="hidden">
-          <span>${ticker}</span>
-        `;
-        container.appendChild(label);
-      });
-    }
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+          iv: iv,
+          mode: CryptoJS.mode.CBC,
+          padding: CryptoJS.pad.Pkcs7
+        });
 
-    function toggleTicker(ticker) {
-      if (selectedTickers.has(ticker)) {
-        selectedTickers.delete(ticker);
-      } else {
-        selectedTickers.add(ticker);
-      }
-      renderTickerCheckboxes();
-      updateDashboard();
-    }
+        const jsonString = decrypted.toString(CryptoJS.enc.Utf8);
+        if (!jsonString) throw new Error("Decryption failed - incorrect passphrase.");
 
-    function selectAllStocks(shouldSelect) {
-      if (shouldSelect) {
-        selectedTickers = new Set(availableTickers);
-      } else {
-        selectedTickers.clear();
-      }
-      renderTickerCheckboxes();
-      updateDashboard();
-    }
+        rawPortfolioData = JSON.parse(jsonString);
+        
+        // Ensure default history object
+        if (!rawPortfolioData.history) rawPortfolioData.history = {};
 
-    // --- Timeframe Filter Controls ---
-    function setTimeframe(tf) {
-      selectedTimeframe = tf;
-      document.querySelectorAll('.tf-btn').forEach(btn => {
-        if (btn.getAttribute('data-tf') === tf) {
-          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md transition';
-        } else {
-          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition';
-        }
-      });
-      updateDashboard();
-    }
+        // Default Cash Account line starting March 11, 2020 if history is empty
+        if (!rawPortfolioData.history["2020-03-11"]) {
+          rawPortfolioData.history["2020-03-11"] = { "Cash Account": 0 };
+        }
 
-    // --- Custom Ticker Addition ---
-    function addCustomTicker() {
-      const symbolInput = document.getElementById('newTickerInput');
-      const valInput = document.getElementById('newValInput');
-      const ticker = symbolInput.value.trim().toUpperCase();
-      const val = parseFloat(valInput.value);
+        // Hide modal & reveal UI
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('dashboardContent').classList.remove('hidden');
+        document.getElementById('lastUpdated').innerText = `Last Sync: ${rawPortfolioData.last_updated || 'N/A'}`;
+        
+        setDefaultDate();
 
-      if (!ticker || isNaN(val)) return;
+        // Discover available tickers across history
+        refreshAvailableTickers();
 
-      const dates = Object.keys(rawPortfolioData.history || {});
-      if (dates.length === 0) return;
+        renderTickerCheckboxes();
+        updateDashboard();
 
-      // Add to latest date entry
-      const latestDate = dates[dates.length - 1];
-      rawPortfolioData.history[latestDate][ticker] = val;
+      } catch (e) {
+        console.error(e);
+        errorEl.innerText = e.message || "Invalid Key. Decryption failed.";
+        errorEl.classList.remove('hidden');
+      }
+    }
 
-      if (!availableTickers.includes(ticker)) {
-        availableTickers.push(ticker);
-      }
-      selectedTickers.add(ticker);
+    function refreshAvailableTickers() {
+      const tickerSet = new Set();
+      Object.values(rawPortfolioData.history || {}).forEach(day => {
+        Object.keys(day).forEach(t => tickerSet.add(t));
+      });
+      availableTickers = Array.from(tickerSet);
+      selectedTickers = new Set(availableTickers);
+    }
 
-      symbolInput.value = '';
-      valInput.value = '';
+    function setEntryMode(mode) {
+      currentEntryMode = mode;
+      const valueBtn = document.getElementById('modeValueBtn');
+      const qtyBtn = document.getElementById('modeQtyBtn');
+      const labelA = document.getElementById('inputLabelA');
+      const inputA = document.getElementById('inputA');
+      const priceWrapper = document.getElementById('priceInputWrapper');
 
-      renderTickerCheckboxes();
-      updateDashboard();
-    }
+      if (mode === 'value') {
+        valueBtn.className = 'px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition';
+        qtyBtn.className = 'px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition';
+        labelA.innerText = 'Total Value ($)';
+        inputA.placeholder = "$ Amount";
+        priceWrapper.classList.add('hidden');
+      } else {
+        qtyBtn.className = 'px-3 py-1 font-semibold rounded bg-emerald-600 text-white transition';
+        valueBtn.className = 'px-3 py-1 font-semibold rounded text-slate-400 hover:text-white transition';
+        labelA.innerText = 'Quantity Shares';
+        inputA.placeholder = 'e.g. 10.5';
+        priceWrapper.classList.remove('hidden');
+      }
+    }
 
-    // --- Main Calculation & Redraw Engine ---
-    function updateDashboard() {
-      if (!rawPortfolioData || !rawPortfolioData.history) return;
+    function addCustomTicker() {
+      const symbolInput = document.getElementById('newTickerInput');
+      const dateInput = document.getElementById('newDateInput');
+      const inputA = document.getElementById('inputA');
+      const inputB = document.getElementById('inputB');
+      const actionType = document.getElementById('actionType').value;
 
-      let dates = Object.keys(rawPortfolioData.history).sort();
-      if (dates.length === 0) return;
+      const ticker = symbolInput.value.trim().toUpperCase();
+      const dateVal = dateInput.value || new Date().toISOString().split('T')[0];
+      const valA = parseFloat(inputA.value);
 
-      // Filter dates based on selected Timeframe
-      if (selectedTimeframe !== 'ALL') {
-        const lastDate = new Date(dates[dates.length - 1]);
-        let cutoff = new Date(lastDate);
-        if (selectedTimeframe === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
-        if (selectedTimeframe === '6M') cutoff.setMonth(cutoff.getMonth() - 6);
-        if (selectedTimeframe === '1Y') cutoff.setFullYear(cutoff.getFullYear() - 1);
+      if (!ticker || isNaN(valA)) return;
 
-        dates = dates.filter(d => new Date(d) >= cutoff);
-      }
+      let transactionValue = 0;
+      if (currentEntryMode === 'value') {
+        transactionValue = valA;
+      } else {
+        const unitPrice = parseFloat(inputB.value);
+        if (isNaN(unitPrice)) return;
+        transactionValue = valA * unitPrice;
+      }
 
-      // Calculate totals for selected tickers across filtered dates
-      const totals = dates.map(d => {
-        const dayData = rawPortfolioData.history[d] || {};
-        let daySum = 0;
-        selectedTickers.forEach(t => {
-          daySum += (dayData[t] || 0);
-        });
-        return daySum;
-      });
+      if (!rawPortfolioData.history[dateVal]) {
+        rawPortfolioData.history[dateVal] = {};
+      }
 
-      // Update KPI Cards
-      const latestTotal = totals.length > 0 ? totals[totals.length - 1] : 0;
-      const initialTotal = totals.length > 0 ? totals[0] : 0;
-      const periodChange = latestTotal - initialTotal;
-      const periodPct = initialTotal > 0 ? (periodChange / initialTotal) * 100 : 0;
+      const existingVal = rawPortfolioData.history[dateVal][ticker] || 0;
 
-      document.getElementById('totalValue').innerText = `$${latestTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-     
-      const changeEl = document.getElementById('dailyChange');
-      const sign = periodChange >= 0 ? '+' : '';
-      changeEl.innerText = `${sign}$${periodChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${sign}${periodPct.toFixed(2)}%)`;
-      changeEl.className = periodChange >= 0 ? 'text-emerald-400 font-extrabold text-3xl mt-1' : 'text-rose-400 font-extrabold text-3xl mt-1';
+      if (actionType === 'BUY') {
+        rawPortfolioData.history[dateVal][ticker] = existingVal + transactionValue;
+      } else if (actionType === 'SELL') {
+        rawPortfolioData.history[dateVal][ticker] = Math.max(0, existingVal - transactionValue);
+      } else { // SET
+        rawPortfolioData.history[dateVal][ticker] = transactionValue;
+      }
 
-      // Update Chart
-      renderChart(dates, totals);
+      refreshAvailableTickers();
+      renderTickerCheckboxes();
+      updateDashboard();
 
-      // Update Holdings Table
-      renderHoldingsTable(latestTotal);
-    }
+      symbolInput.value = '';
+      inputA.value = '';
+      inputB.value = '';
+    }
 
-    function renderChart(dates, totals) {
-      const canvas = document.getElementById('portfolioChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
+    function deleteTicker(ticker) {
+      if (!confirm(`Are you sure you want to remove ${ticker}?`)) return;
 
-      if (chartInstance) chartInstance.destroy();
+      Object.keys(rawPortfolioData.history).forEach(d => {
+        delete rawPortfolioData.history[d][ticker];
+      });
 
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'Selected Portfolio Value ($)',
-            data: totals,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.2,
-            pointRadius: 3,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#10b981'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: (ctx) => ` Value: $${(ctx.parsed.y || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-              }
-            }
-          },
-          scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => '$' + v.toLocaleString() } }
-          }
-        }
-      });
-    }
+      refreshAvailableTickers();
+      renderTickerCheckboxes();
+      updateDashboard();
+    }
 
-    function renderHoldingsTable(totalPortfolioValue) {
-      const tableBody = document.getElementById('holdingsTableBody');
-      if (!tableBody) return;
-      tableBody.innerHTML = '';
+    function renderTickerCheckboxes() {
+      const container = document.getElementById('stockCheckboxes');
+      container.innerHTML = '';
 
-      const dates = Object.keys(rawPortfolioData.history || {}).sort();
-      if (dates.length === 0) return;
-      const latestDay = rawPortfolioData.history[dates[dates.length - 1]] || {};
+      availableTickers.forEach(ticker => {
+        const label = document.createElement('label');
+        label.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${
+          selectedTickers.has(ticker) 
+            ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300' 
+            : 'bg-slate-950 border-slate-800 text-slate-500'
+        }`;
+        
+        label.innerHTML = `
+          <input type="checkbox" value="${ticker}" ${selectedTickers.has(ticker) ? 'checked' : ''} 
+                 onchange="toggleTicker('${ticker}')" class="hidden">
+          <span>${ticker}</span>
+        `;
+        container.appendChild(label);
+      });
+    }
 
-      availableTickers.forEach(ticker => {
-        const val = latestDay[ticker] || 0;
-        const isSelected = selectedTickers.has(ticker);
-        const weight = totalPortfolioValue > 0 && isSelected ? (val / totalPortfolioValue) * 100 : 0;
+    function toggleTicker(ticker) {
+      if (selectedTickers.has(ticker)) {
+        selectedTickers.delete(ticker);
+      } else {
+        selectedTickers.add(ticker);
+      }
+      renderTickerCheckboxes();
+      updateDashboard();
+    }
 
-        const row = document.createElement('tr');
-        row.className = isSelected ? 'hover:bg-slate-800/40' : 'opacity-40 hover:bg-slate-800/20';
-        row.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-200 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
-            ${ticker}
-          </td>
-          <td class="py-3 px-4 text-right text-slate-300 font-mono">$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-          <td class="py-3 px-4 text-right text-slate-400 font-mono">${isSelected ? weight.toFixed(2) + '%' : 'Excluded'}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-  </script>
-</body>
-</html>.createElement('tr');
-        row.className = isSelected ? 'hover:bg-slate-800/40' : 'opacity-40 hover:bg-slate-800/20';
-        row.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-200 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
-            ${ticker}
-          </td>
-          <td class="py-3 px-4 text-right text-slate-300 font-mono">$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-          <td class="py-3 px-4 text-right text-slate-400 font-mono">${isSelected ? weight.toFixed(2) + '%' : 'Excluded'}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-  </script>
+    function selectAllStocks(shouldSelect) {
+      if (shouldSelect) {
+        selectedTickers = new Set(availableTickers);
+      } else {
+        selectedTickers.clear();
+      }
+      renderTickerCheckboxes();
+      updateDashboard();
+    }
+
+    function setTimeframe(tf) {
+      selectedTimeframe = tf;
+      document.querySelectorAll('.tf-btn').forEach(btn => {
+        if (btn.getAttribute('data-tf') === tf) {
+          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md transition';
+        } else {
+          btn.className = 'tf-btn px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition';
+        }
+      });
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      if (!rawPortfolioData || !rawPortfolioData.history) return;
+
+      let dates = Object.keys(rawPortfolioData.history).sort();
+      if (dates.length === 0) return;
+
+      if (selectedTimeframe !== 'ALL') {
+        const lastDate = new Date(dates[dates.length - 1]);
+        let cutoff = new Date(lastDate);
+        if (selectedTimeframe === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
+        if (selectedTimeframe === '6M') cutoff.setMonth(cutoff.getMonth() - 6);
+        if (selectedTimeframe === '1Y') cutoff.setFullYear(cutoff.getFullYear() - 1);
+
+        dates = dates.filter(d => new Date(d) >= cutoff);
+      }
+
+      const totals = dates.map(d => {
+        const dayData = rawPortfolioData.history[d] || {};
+        let daySum = 0;
+        selectedTickers.forEach(t => {
+          daySum += (dayData[t] || 0);
+        });
+        return daySum;
+      });
+
+      const latestTotal = totals.length > 0 ? totals[totals.length - 1] : 0;
+      const initialTotal = totals.length > 0 ? totals[0] : 0;
+      const periodChange = latestTotal - initialTotal;
+      const periodPct = initialTotal > 0 ? (periodChange / initialTotal) * 100 : 0;
+
+      document.getElementById('totalValue').innerText = `$${latestTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      
+      const changeEl = document.getElementById('dailyChange');
+      const sign = periodChange >= 0 ? '+' : '';
+      changeEl.innerText = `${sign}$${periodChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${sign}${periodPct.toFixed(2)}%)`;
+      changeEl.className = periodChange >= 0 ? 'text-2xl md:text-3xl font-extrabold mt-1 text-emerald-400' : 'text-2xl md:text-3xl font-extrabold mt-1 text-rose-400';
+
+      renderChart(dates, totals);
+      renderHoldingsTable(latestTotal);
+    }
+
+    function renderChart(dates, totals) {
+      const canvas = document.getElementById('portfolioChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Selected Portfolio Value ($)',
+            data: totals,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 3,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#10b981'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: (ctx) => ` Value: $${(ctx.parsed.y || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => '$' + v.toLocaleString() } }
+          }
+        }
+      });
+    }
+
+    function renderHoldingsTable(totalPortfolioValue) {
+      const tableBody = document.getElementById('holdingsTableBody');
+      if (!tableBody) return;
+      tableBody.innerHTML = '';
+
+      const dates = Object.keys(rawPortfolioData.history || {}).sort();
+      if (dates.length === 0) return;
+      const latestDay = rawPortfolioData.history[dates[dates.length - 1]] || {};
+
+      availableTickers.forEach(ticker => {
+        const val = latestDay[ticker] || 0;
+        const isSelected = selectedTickers.has(ticker);
+        const weight = totalPortfolioValue > 0 && isSelected ? (val / totalPortfolioValue) * 100 : 0;
+
+        const row = document.createElement('tr');
+        row.className = isSelected ? 'hover:bg-slate-800/40' : 'opacity-40 hover:bg-slate-800/20';
+        row.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-200 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
+            ${ticker}
+          </td>
+          <td class="py-3 px-4 text-right text-slate-300 font-mono">$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td class="py-3 px-4 text-right text-slate-400 font-mono">${isSelected ? weight.toFixed(2) + '%' : 'Excluded'}</td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="deleteTicker('${ticker}')" title="Delete ${ticker}" class="text-slate-500 hover:text-rose-400 transition-colors p-1">
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  </script>
 </body>
 </html>
