@@ -9,6 +9,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.padding import PKCS7
 import pandas as pd
 import yfinance as yf
+# Force yfinance to avoid concurrent SQLite caching issues
+import yfinance.pdr_override
 
 # ==========================================
 # 1. READ PASSPHRASE FROM ENVIRONMENT / GIT SECRETS
@@ -106,7 +108,11 @@ for date_idx, row in data.iterrows():
         t = h["ticker"]
         if date_str >= h["purchase_date"]:
             price = (
-                float(row[t]) if not pd.isna(row[t]) else h["cost_basis"]
+                # Check if ticker column exists in the downloaded row before reading
+                if t in row and not pd.isna(row[t]):
+                    val = float(row[t])
+                else:
+                    val = h.get("cost_basis", 0.0)
             )
             daily_entry[t] = round(price * h["shares"], 2)
         else:
