@@ -107,13 +107,12 @@ for date_idx, row in data.iterrows():
     for h in HOLDINGS:
         t = h["ticker"]
         if date_str >= h["purchase_date"]:
-            price = (
-                # Check if ticker column exists in the downloaded row before reading
-                if t in row and not pd.isna(row[t]):
-                    val = float(row[t])
-                else:
-                    val = h.get("cost_basis", 0.0)
-            )
+            # Check if ticker column exists in the downloaded row before reading
+            if t in row and not pd.isna(row[t]):
+                price = float(row[t])
+            else:
+                price = float(h.get("cost_basis", 0.0))
+
             daily_entry[t] = round(price * h["shares"], 2)
         else:
             daily_entry[t] = 0.0
