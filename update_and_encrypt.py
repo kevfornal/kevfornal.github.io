@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.padding import PKCS7
 import pandas as pd
 import yfinance as yf
 # Force yfinance to avoid concurrent SQLite caching issues
-import yfinance.pdr_override
+# import yfinance.pdr_override
 
 # ==========================================
 # 1. READ PASSPHRASE FROM ENVIRONMENT / GIT SECRETS
